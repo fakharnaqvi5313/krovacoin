@@ -18,14 +18,18 @@
 #include <boost/test/unit_test.hpp>
 
 
-static const std::string strSecret1  = "87vK7Vayi3QLsuiva5yWSuVwSMhMcRM9dBsaD6JXMD1P5vnjRFn";
-static const std::string strSecret2  = "87FGYGFDg5SYfdD4XL593hr7do6f52czPecVsYSAXi8N4RGeS9i";
-static const std::string strSecret1C = "YRYJwfAyJ9c2jhi3T2xQyLijGvM7yLTw4izDaNQLxBzgUYrQiPmJ";
-static const std::string strSecret2C = "YNZyazHkwUbkmUpEYsBGWwHnHQTy2n9rJy1gS5k54YXVx3pE8n6N";
-static const std::string addr1 = "DBFi8XAE1rcdCQfkv9w22n8Y9RxgaJnrDD";
-static const std::string addr2 = "DPvKfv1FVp69yZMDzeuugvfZ9pzYiMv1bs";
-static const std::string addr1C = "DNPrHK9ezAAUVExFDpZ7EE1xWpPskgp1gP";
-static const std::string addr2C = "DNBVSAoc2whPFjZVAZ1pQbXPJk1LRrDC8Q";
+// NOTE: these test vectors were originally encoded for PIVX's mainnet prefixes
+// (SECRET_KEY=212, PUBKEY_ADDRESS=30) and re-encoded here for KrovaCoin's
+// (SECRET_KEY=173, PUBKEY_ADDRESS=45) -- same underlying key material, just
+// re-prefixed, so the secret/address pairs below still correspond to each other.
+static const std::string strSecret1  = "6p7HET5jUT2Wcv4RDUmYFQ7jiugMFxUzwG7NhFUZaekFqixsYpD";
+static const std::string strSecret2  = "6oSEfDjySV4iQdYZAisArCTuvM5eiZkqhirJMhcCm9sEpAwhovX";
+static const std::string strSecret1C = "SevieN7tU9sfjXC5t5ZavZ2jZyWgR1taiVh8keteoXbvVe18tUMq";
+static const std::string strSecret2C = "SbxPHhEg7UsPmJJGyunSU9bnaTdXUTaVxjibcNENut8jy98s7ibD";
+static const std::string addr1 = "KDKku9dYfZZmTum4HSvoJfDLazpqKxfP6c";
+static const std::string addr2 = "KRzNSYUa9X3JF4SXMwugxokMbPrhQUBZcW";
+static const std::string addr1C = "KQTu3wcyds7ckk3Yb7YtW76kxPG2M2WYdZ";
+static const std::string addr2C = "KQFYCoGvgeeXXEenXr1bgUcBkJsV8z2DcN";
 
 
 static const std::string strAddressBad ="Xta1praZQjyELweyMByXyiREw1ZRsjXzVP";
