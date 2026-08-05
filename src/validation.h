@@ -315,6 +315,8 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool fCheckSig = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool CheckWork(const CBlock& block, const CBlockIndex* const pindexPrev);
+/** Reject a coinstake using a cold-staking "last output free" script unless its free output (if any) matches the one before it -- KrovaCoin has no masternode/budget payment to legitimately occupy that slot. */
+bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight);
 
 /** Context-dependent validity checks */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
