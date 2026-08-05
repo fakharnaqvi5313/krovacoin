@@ -222,10 +222,10 @@ public:
         // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
         // re-grind before any public launch (see GENESIS_PUBKEY_HEX comment above).
         genesis = CreateGenesisBlock("KrovaCoin genesis - TODO insert verifiable Aug 2026 headline before public launch (see launch plan)",
-                                      1785931200, 898400, 0x1e0ffff0, 7, 0);
+                                      1785931200, 336867, 0x1e0ffff0, 7, 0);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000c12d9262ee4a111f592dcbc2c6732fcf359bc661f2ae8f14eb3d265ff23"));
-        assert(genesis.hashMerkleRoot == uint256S("0x9719b9baf25fe95f145900c813b129937bec586626027058905036b31e484dcb"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000f3cceffcbacec9387eb6c768c6ae9966db7eb40c3461e8df93ed740178d"));
+        assert(genesis.hashMerkleRoot == uint256S("0xb26beffd3e4735aa77e7ce94a9ff49902ad46b39a7e0f0ab50b13787a4381008"));
 
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -382,10 +382,10 @@ public:
         // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
         // re-grind before the public testnet launches.
         genesis = CreateGenesisBlock("KrovaCoin testnet genesis - TODO insert verifiable Aug 2026 headline before public launch",
-                                      1785931201, 2401963, 0x1e0ffff0, 7, 0);
+                                      1785931201, 372424, 0x1e0ffff0, 7, 0);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000002fb12fb15eb62e25a6a3d0c0abccebda0c2791ca09b3e14dcf049570845"));
-        assert(genesis.hashMerkleRoot == uint256S("0x81af61b8563a34cd1f20a8c6a620407edb41c06747d775d424f8d36cf7e209fa"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000089ff707dcfdae394e0b4dd98f613b70ede62c91c4bf0c3bd3bc3e3db5a2"));
+        assert(genesis.hashMerkleRoot == uint256S("0xb7f862c480f964409e6c3eb8e1b7b92e685b64cb9d734e0041642289d34954ba"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -527,10 +527,10 @@ public:
     {
         strNetworkID = "regtest";
 
-        genesis = CreateGenesisBlock("KrovaCoin regtest genesis", 1785931202, 7, 0x207fffff, 7, 0);
+        genesis = CreateGenesisBlock("KrovaCoin regtest genesis", 1785931202, 0, 0x207fffff, 7, 0);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x5efd3427c08532c310590e816b0818bf99b5632122cb72780dc8c4e2c91ce119"));
-        assert(genesis.hashMerkleRoot == uint256S("0xf5302dd40552cf37bc7de1d0bba1cb68d4478771feec58f6cfde40e8760298cf"));
+        assert(consensus.hashGenesisBlock == uint256S("0x686cf7907e179683b7963f4bbce71307a6254ac83e2a7376b956a1ead4b9c87d"));
+        assert(genesis.hashMerkleRoot == uint256S("0xa2fe36fb9bd6393bc2ab6c66aa108388497abacb1f53bad6d16d7691e8a3a56f"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
