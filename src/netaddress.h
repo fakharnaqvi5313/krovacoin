@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2021 The Bitcoin Core developers
-// Copyright (c) 2017-2021 The PIVX Core developers
+// Copyright (c) 2017-2021 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_NETADDRESS_H
-#define PIVX_NETADDRESS_H
+#ifndef KROVACOIN_NETADDRESS_H
+#define KROVACOIN_NETADDRESS_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pivx-config.h"
+#include "config/krovacoin-config.h"
 #endif
 
 #include "compat.h"
@@ -511,4 +511,4 @@ public:
     }
 };
 
-#endif // PIVX_NETADDRESS_H
+#endif // KROVACOIN_NETADDRESS_H

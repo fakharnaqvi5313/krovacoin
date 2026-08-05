@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The PIVX Core developers
+# Copyright (c) 2020-2021 The KROVACOIN Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 """
 Test checking masternode ping thread
-Does not use functions of PivxTier2TestFramework as we don't want to send
+Does not use functions of KrovacoinTier2TestFramework as we don't want to send
 pings on demand. Here, instead, mocktime is disabled, and we just wait with
 time.sleep to verify that masternodes send pings correctly.
 """
@@ -12,7 +12,7 @@ time.sleep to verify that masternodes send pings correctly.
 import os
 import time
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import KrovacoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -22,7 +22,7 @@ from test_framework.util import (
 )
 
 
-class MasternodePingTest(PivxTestFramework):
+class MasternodePingTest(KrovacoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True

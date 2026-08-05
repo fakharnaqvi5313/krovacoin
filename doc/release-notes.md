@@ -1,13 +1,13 @@
-PIVX Core version *5.6.0* is now available from:  <https://github.com/pivx-project/pivx/releases>
+KROVACOIN Core version *5.6.0* is now available from:  <https://github.com/krovacoin-project/krovacoin/releases>
 
 This is a new major version release, including various bug fixes and performance improvements, as well as updated translations.
 
-Please report bugs using the issue tracker at github: <https://github.com/pivx-project/pivx/issues>
+Please report bugs using the issue tracker at github: <https://github.com/krovacoin-project/krovacoin/issues>
 
 Mandatory Update
 ==============
 
-PIVX Core v5.6.0 is a mandatory update for all users. This release contains new consensus rules and improvements that are not backwards compatible with older versions. Users will need to update their clients before enforcement of this update goes into effect.
+KROVACOIN Core v5.6.0 is a mandatory update for all users. This release contains new consensus rules and improvements that are not backwards compatible with older versions. Users will need to update their clients before enforcement of this update goes into effect.
 
 Exchange address activation is scheduled to go into effect at the following time:
 
@@ -21,14 +21,14 @@ Note: In preparation for the new address type activation, upgraded peers will st
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/PIVX-Qt (on Mac) or pivxd/pivx-qt (on Linux).
+If you are running an older version, shut it down. Wait until it has completely shut down (which might take a few minutes for older versions), then run the installer (on Windows) or just copy over /Applications/KROVA-Qt (on Mac) or krovad/krova-qt (on Linux).
 
 Notable Changes
 ==============
 
 ### New Exchange Address Type
 
-A new address type has been added for use by exchanges that require additional regulatory compliance. This new "exchange address" functions similarly to a regular PIVX address, but with one distinct difference; transactions originating from a SHIELD address are not allowed to be sent to said exchange addresses.
+A new address type has been added for use by exchanges that require additional regulatory compliance. This new "exchange address" functions similarly to a regular KROVACOIN address, but with one distinct difference; transactions originating from a SHIELD address are not allowed to be sent to said exchange addresses.
 
 Creation of these new exchange addresses is available via the new `getnewexchangeaddress` RPC command. It takes an optional `label (string)` to set a label for the address if necessary. Functionality is the same comparatively to `getnewaddress`, `getnewstakingaddress` and `getnewshieldaddress`
 
@@ -51,7 +51,7 @@ It is now possible to use the GUI's Coin Control feature to manually select whic
 
 ### Generate a proposal payout address on-the-fly
 
-Proposal creators can now choose to generate a new PIVX address to be used as a proposal's payout address directly within the proposal creation wizard.
+Proposal creators can now choose to generate a new KROVACOIN address to be used as a proposal's payout address directly within the proposal creation wizard.
 
 ### Lockable sapling notes (SHIELD UTXOs)
 
@@ -149,7 +149,7 @@ Detailed release notes follow. For convenience in locating the code changes and 
 
 ### Documentation
 - #2788 `d3acaa09f5fd9d5ef4a95ca7cd2b1a674e7851ce` [Doc] Don't include dependency paths in Doxygen or Coverage (Fuzzbawls)
-- #2846 `28c9eaba5d89b7dd77d128bd88d2465b4d883e3c` [Doc] Remove bitness from pivx-qt help message and manpage (Fuzzbawls)
+- #2846 `28c9eaba5d89b7dd77d128bd88d2465b4d883e3c` [Doc] Remove bitness from krova-qt help message and manpage (Fuzzbawls)
 - #2894 `3c1f32fb1258aa80f9683e0a84f466a8535fea98` [Doc] Update Ubuntu ppa source for db4.8 (Fuzzbawls)
 - #2898 `a949c658b815bc2e817c238aab00ed4711844939` [Doc] Update gpg keyserver URL (Fuzzbawls)
 
@@ -172,4 +172,4 @@ Thanks to everyone who directly contributed to this release:
 - andi448
 - panleone
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/pivx-project-translations/), the QA team during Testing and the Node hosts supporting our Testnet.
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/krovacoin-project-translations/), the QA team during Testing and the Node hosts supporting our Testnet.

@@ -24,4 +24,4 @@ while read fingerprint keyholder_name; do gpg --keyserver hkp://keyserver.ubuntu
 ```
 
 Add your key to the list if you provided Gitian signatures for two major or
-minor releases of PIVX Core.
+minor releases of KROVACOIN Core.

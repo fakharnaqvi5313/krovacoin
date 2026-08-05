@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The PIVX Core developers
+# Copyright (c) 2021 The KROVACOIN Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet's autocombine feature."""
 
 import time
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import KrovacoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error
 )
 
 
-class AutoCombineTest(PivxTestFramework):
+class AutoCombineTest(KrovacoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -42,7 +42,7 @@ class AutoCombineTest(PivxTestFramework):
         assert_equal(walletinfo['balance'], 250*2)
         assert_equal(walletinfo['txcount'], 102)
 
-        self.log.info("Set autocombine to 500 PIV and frequency of 10")
+        self.log.info("Set autocombine to 500 KROV and frequency of 10")
         setautocombine = self.nodes[0].setautocombinethreshold(True, 500, 10)
         assert_equal(setautocombine['enabled'], True)
         assert_equal(setautocombine['threshold'], 500)

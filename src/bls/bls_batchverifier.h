@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2022 The Dash Core developers
-// Copyright (c) 2023 The PIVX Core developers
+// Copyright (c) 2023 The KROVACOIN Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_CRYPTO_BLS_BATCHVERIFIER_H
-#define PIVX_CRYPTO_BLS_BATCHVERIFIER_H
+#ifndef KROVACOIN_CRYPTO_BLS_BATCHVERIFIER_H
+#define KROVACOIN_CRYPTO_BLS_BATCHVERIFIER_H
 
 #include "bls_worker.h"
 
@@ -237,4 +237,4 @@ private:
     }
 };
 
-#endif // PIVX_CRYPTO_BLS_BATCHVERIFIER_H
+#endif // KROVACOIN_CRYPTO_BLS_BATCHVERIFIER_H

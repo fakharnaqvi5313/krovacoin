@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 The Bitcoin Core developers
-# Copyright (c) 2021-2022 The PIVX Core developers
+# Copyright (c) 2021-2022 The KROVACOIN Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
 
-Verify that a pivxd node can load multiple wallet files
+Verify that a krovad node can load multiple wallet files
 """
 
 import os
 import shutil
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import KrovacoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.test_node import ErrorMatch
 
-class MultiWalletTest(PivxTestFramework):
+class MultiWalletTest(KrovacoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

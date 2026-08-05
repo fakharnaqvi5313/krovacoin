@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The PIVX Core developers
+// Copyright (c) 2021 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -459,7 +459,7 @@ OperationResult SaplingOperation::loadUnspentNotes(TxValues& txValues, uint256& 
             sspkm->GetFilteredNotes(_shieldedInputs, fromAddress.fromSapAddr, 0);
             return errorOut(_shieldedInputs.empty() ?
                     "Insufficient funds, no available notes to spend" :
-                    "Insufficient funds, shielded PIV need at least 5 confirmations");
+                    "Insufficient funds, shielded KROV need at least 5 confirmations");
         }
     }
 

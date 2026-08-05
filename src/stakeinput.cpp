@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The PIVX Core developers
+// Copyright (c) 2017-2022 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -81,7 +81,7 @@ CAmount CPivStake::GetValue() const
 
 CDataStream CPivStake::GetUniqueness() const
 {
-    //The unique identifier for a PIV stake is the outpoint
+    //The unique identifier for a KROV stake is the outpoint
     CDataStream ss(SER_NETWORK, 0);
     ss << outpointFrom.n << outpointFrom.hash;
     return ss;

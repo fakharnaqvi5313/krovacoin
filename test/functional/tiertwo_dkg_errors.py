@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The PIVX Core developers
+# Copyright (c) 2021-2022 The KROVACOIN Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test errors during DKG phases"""
 
-from test_framework.test_framework import PivxDMNTestFramework, ExpectedDKGMessages
+from test_framework.test_framework import KrovacoinDMNTestFramework, ExpectedDKGMessages
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
 
-class DkgErrorsTest(PivxDMNTestFramework):
+class DkgErrorsTest(KrovacoinDMNTestFramework):
 
     def set_test_params(self):
         self.set_base_test_params()
-        self.extra_args = [["-nuparams=v5_shield:1", "-nuparams=PIVX_v5.5:130", "-nuparams=v6_evo:130", "-debug=llmq", "-debug=dkg", "-debug=net"]] * self.num_nodes
+        self.extra_args = [["-nuparams=v5_shield:1", "-nuparams=KROVACOIN_v5.5:130", "-nuparams=v6_evo:130", "-debug=llmq", "-debug=dkg", "-debug=net"]] * self.num_nodes
         self.extra_args[0].append("-sporkkey=932HEevBSujW2ud7RfB1YF91AFygbBRQj3de3LyaCRqNzKKgWXi")
 
     def reset_simerror(self, node):

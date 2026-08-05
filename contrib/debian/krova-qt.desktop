@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=KROVACOIN Core
+Comment=KROVACOIN P2P Cryptocurrency
+Comment[fr]=KROVACOIN, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=KROVACOIN, eşten eşe kriptografik sanal para birimi
+Exec=krova-qt %u
+Terminal=false
+Type=Application
+Icon=krovacoin128
+MimeType=x-scheme-handler/krovacoin;
+Categories=Office;Finance;
+StartupWMClass=Krova-qt

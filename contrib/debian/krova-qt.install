@@ -1,0 +1,6 @@
+usr/local/bin/krova-qt usr/bin
+share/pixmaps/krovacoin32.xpm usr/share/pixmaps
+share/pixmaps/krovacoin16.xpm usr/share/pixmaps
+share/pixmaps/krovacoin128.png usr/share/pixmaps
+debian/krova-qt.desktop usr/share/applications
+debian/krova-qt.protocol usr/share/kde4/services/

@@ -1,0 +1,18 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bn">locale/krovacoin_bn.qm</file>
+        <file alias="de">locale/krovacoin_de.qm</file>
+        <file alias="en">locale/krovacoin_en.qm</file>
+        <file alias="es">locale/krovacoin_es.qm</file>
+        <file alias="es_ES">locale/krovacoin_es_ES.qm</file>
+        <file alias="fa">locale/krovacoin_fa.qm</file>
+        <file alias="fr_FR">locale/krovacoin_fr_FR.qm</file>
+        <file alias="hr_HR">locale/krovacoin_hr_HR.qm</file>
+        <file alias="ko_KR">locale/krovacoin_ko_KR.qm</file>
+        <file alias="nl">locale/krovacoin_nl.qm</file>
+        <file alias="pl">locale/krovacoin_pl.qm</file>
+        <file alias="pt">locale/krovacoin_pt.qm</file>
+        <file alias="pt_BR">locale/krovacoin_pt_BR.qm</file>
+        <file alias="sv">locale/krovacoin_sv.qm</file>
+    </qresource>
+</RCC>

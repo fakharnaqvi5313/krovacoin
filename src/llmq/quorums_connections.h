@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2022 The PIVX Core developers
+// Copyright (c) 2022 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_QUORUMS_CONNECTIONS_H
-#define PIVX_QUORUMS_CONNECTIONS_H
+#ifndef KROVACOIN_QUORUMS_CONNECTIONS_H
+#define KROVACOIN_QUORUMS_CONNECTIONS_H
 
 #include "consensus/params.h"
 #include "quorums.h"
@@ -29,4 +29,4 @@ void AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex* 
 
 } // namespace llmq
 
-#endif // PIVX_QUORUMS_CONNECTIONS_H
+#endif // KROVACOIN_QUORUMS_CONNECTIONS_H

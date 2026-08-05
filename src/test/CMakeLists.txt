@@ -81,8 +81,8 @@ endfunction()
 GenerateRaws(${RAW_TEST_FILES})
 
 set(BITCOIN_TEST_SUITE
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_pivx.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_pivx.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_krova.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_krova.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/librust/sapling_test_fixture.h
         ${CMAKE_CURRENT_SOURCE_DIR}/librust/sapling_test_fixture.cpp
         ${CMAKE_SOURCE_DIR}/src/wallet/test/wallet_test_fixture.h
@@ -186,10 +186,10 @@ set(BITCOIN_TESTS
         ${CMAKE_SOURCE_DIR}/src/wallet/test/pos_validations_tests.cpp
         )
 
-set(test_test_pivx_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
-add_executable(test_pivx ${test_test_pivx_SOURCES} ${BitcoinHeaders})
-add_dependencies(test_pivx genHeaders genRaws libunivalue libsecp256k1 libzcashrust leveldb crc32c bls)
-target_include_directories(test_pivx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+set(test_test_krova_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
+add_executable(test_krova ${test_test_krova_SOURCES} ${BitcoinHeaders})
+add_dependencies(test_krova genHeaders genRaws libunivalue libsecp256k1 libzcashrust leveldb crc32c bls)
+target_include_directories(test_krova PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/leveldb
         ${CMAKE_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_SOURCE_DIR}/src/leveldb/helpers/memenv
@@ -197,7 +197,7 @@ target_include_directories(test_pivx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ${GMP_INCLUDE_DIR}
         ${Boost_INCLUDE_DIRS}
         ${sodium_INCLUDE_DIR})
-target_link_libraries(test_pivx PRIVATE
+target_link_libraries(test_krova PRIVATE
         SERVER_A
         CLI_A
         WALLET_A
@@ -215,24 +215,24 @@ target_link_libraries(test_pivx PRIVATE
         ${BerkeleyDB_LIBRARIES} ${Boost_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${LIBEVENT_LIB} ${GMP_LIBRARY} pthread
         )
 if(ZMQ_FOUND)
-    target_link_libraries(test_pivx PRIVATE ZMQ_A ${ZMQ_LIB})
-    target_include_directories(test_pivx PRIVATE ${ZMQ_INCLUDE_DIR})
+    target_link_libraries(test_krova PRIVATE ZMQ_A ${ZMQ_LIB})
+    target_include_directories(test_krova PRIVATE ${ZMQ_INCLUDE_DIR})
 endif()
 if(MINIUPNP_FOUND)
-    target_compile_definitions(test_pivx PRIVATE "-DSTATICLIB -DMINIUPNP_STATICLIB")
-    target_link_libraries(test_pivx PRIVATE ${MINIUPNP_LIBRARY})
-    target_include_directories(test_pivx PRIVATE ${MINIUPNP_INCLUDE_DIR})
+    target_compile_definitions(test_krova PRIVATE "-DSTATICLIB -DMINIUPNP_STATICLIB")
+    target_link_libraries(test_krova PRIVATE ${MINIUPNP_LIBRARY})
+    target_include_directories(test_krova PRIVATE ${MINIUPNP_INCLUDE_DIR})
 endif()
 if(NAT-PMP_FOUND)
-    target_link_libraries(test_pivx PRIVATE ${NAT-PMP_LIBRARY})
-    target_include_directories(test_pivx PRIVATE ${NAT-PMP_INCLUDE_DIR})
+    target_link_libraries(test_krova PRIVATE ${NAT-PMP_LIBRARY})
+    target_include_directories(test_krova PRIVATE ${NAT-PMP_INCLUDE_DIR})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(test_pivx PRIVATE "-framework Cocoa")
+    target_link_libraries(test_krova PRIVATE "-framework Cocoa")
 endif()
 
-target_link_libraries(test_pivx PRIVATE ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
+target_link_libraries(test_krova PRIVATE ${sodium_LIBRARY_RELEASE} -ldl -lpthread)
 
 enable_testing()
-add_test(NAME btest_pivx COMMAND test_pivx)
+add_test(NAME btest_krova COMMAND test_krova)

@@ -1,41 +1,41 @@
-PIVX Core
+KROVACOIN Core
 =============
 
 Setup
 ---------------------
-[PIVX Core](http://pivx.org/wallet) is the original PIVX client and it builds the backbone of the network. However, it downloads and stores the entire history of PIVX transactions; depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once.
+[KROVACOIN Core](http://krovacoin.org/wallet) is the original KROVACOIN client and it builds the backbone of the network. However, it downloads and stores the entire history of KROVACOIN transactions; depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once.
 
 Running
 ---------------------
-The following are some helpful notes on how to run PIVX Core on your native platform.
+The following are some helpful notes on how to run KROVACOIN Core on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/pivx-qt` (GUI) or
-- `bin/pivxd` (headless)
+- `bin/krova-qt` (GUI) or
+- `bin/krovad` (headless)
 
-If this is the first time running PIVX Core (since v5.0.0), you'll need to install the sapling params by running the included `install-params.sh` script, which copies the two params files to `$HOME/.pivx-params`
+If this is the first time running KROVACOIN Core (since v5.0.0), you'll need to install the sapling params by running the included `install-params.sh` script, which copies the two params files to `$HOME/.krovacoin-params`
 
 ### Windows
 
-Unpack the files into a directory, and then run pivx-qt.exe.
+Unpack the files into a directory, and then run krova-qt.exe.
 
 ### macOS
 
-Drag PIVX-Qt to your applications folder, and then run PIVX-Qt.
+Drag KROVA-Qt to your applications folder, and then run KROVA-Qt.
 
 ### Need Help?
 
-* See the documentation at the [PIVX Wiki](https://github.com/PIVX-Project/PIVX/wiki)
+* See the documentation at the [KROVACOIN Wiki](https://github.com/KROVACOIN-Project/KROVACOIN/wiki)
 for help and more information.
-* Ask for help on the [PIVX Forum](http://forum.pivx.org/).
-* Join our Discord server [Discord Server](https://discord.pivx.org)
+* Ask for help on the [KROVACOIN Forum](http://forum.krovacoin.org/).
+* Join our Discord server [Discord Server](https://discord.krovacoin.org)
 
 Building
 ---------------------
-The following are developer notes on how to build PIVX Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build KROVACOIN Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -45,21 +45,21 @@ The following are developer notes on how to build PIVX Core on your native platf
 
 Development
 ---------------------
-The PIVX repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The KROVACOIN repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Multiwallet Qt Development](multiwallet-qt.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://www.fuzzbawls.pw/pivx/doxygen/)
+- [Source Code Documentation (External Link)](https://www.fuzzbawls.pw/krovacoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Unit Tests](unit-tests.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Dnsseed Policy](dnsseed-policy.md)
 
 ### Resources
-* Discuss on the [PIVX](http://forum.pivx.org/) forum.
-* Join the [PIVX Discord](https://discord.pivx.org).
+* Discuss on the [KROVACOIN](http://forum.krovacoin.org/) forum.
+* Join the [KROVACOIN Discord](https://discord.krovacoin.org).
 
 ### Miscellaneous
 - [Files](files.md)

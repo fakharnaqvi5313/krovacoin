@@ -1,10 +1,10 @@
 // Copyright (c) 2018 The Dash Core developers
-// Copyright (c) 2023 The PIVX developers
+// Copyright (c) 2023 The KROVACOIN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_QUORUMS_H
-#define PIVX_QUORUMS_H
+#ifndef KROVACOIN_QUORUMS_H
+#define KROVACOIN_QUORUMS_H
 
 #include "bls/bls_worker.h"
 #include "bls/bls_wrapper.h"
@@ -118,4 +118,4 @@ private:
 extern std::unique_ptr<CQuorumManager> quorumManager;
 } // namespace llmq
 
-#endif // PIVX_QUORUMS_H
+#endif // KROVACOIN_QUORUMS_H

@@ -206,8 +206,8 @@ struct Params {
     int height_last_ZC_WrappedSerials;
 
     // validation by-pass
-    int64_t nPivxBadBlockTime;
-    unsigned int nPivxBadBlockBits;
+    int64_t nKrovacoinBadBlockTime;
+    unsigned int nKrovacoinBadBlockBits;
 
     // Map with network updates
     NetworkUpgrade vUpgrades[MAX_NETWORK_UPGRADES];

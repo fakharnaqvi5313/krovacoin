@@ -1,0 +1,8 @@
+/usr/bin/krova-cli		--	gen_context(system_u:object_r:krovacoin_exec_t,s0)
+/usr/sbin/krovad		--	gen_context(system_u:object_r:krovacoin_exec_t,s0)
+/usr/lib(64)?/krovacoin/krovad		--	gen_context(system_u:object_r:krovacoin_exec_t,s0)
+
+/etc/krovacoin(/.*)?		gen_context(system_u:object_r:krovacoin_conf_t,s0)
+/var/lib/krovacoin(/.*)?		gen_context(system_u:object_r:krovacoin_var_lib_t,s0)
+
+(/var)?/run/krovad(/.*)?   gen_context(system_u:object_r:krovacoin_var_run_t,s0)

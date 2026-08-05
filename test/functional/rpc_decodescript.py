@@ -7,10 +7,10 @@
 from io import BytesIO
 
 from test_framework.messages import CTransaction
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import KrovacoinTestFramework
 from test_framework.util import assert_equal, hex_str_to_bytes
 
-class DecodeScriptTest(PivxTestFramework):
+class DecodeScriptTest(KrovacoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

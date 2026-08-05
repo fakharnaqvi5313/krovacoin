@@ -1,8 +1,8 @@
-// Copyright (c) 2022 The PIVX Core developers
+// Copyright (c) 2022 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_pivx.h"
+#include "test/test_krova.h"
 
 #include "evo/deterministicmns.h"
 #include "llmq/quorums_connections.h"

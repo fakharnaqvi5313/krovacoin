@@ -1,9 +1,9 @@
-// Copyright (c) 2021 The PIVX Core developers
+// Copyright (c) 2021 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_BLOCKSTATECATCHER_H
-#define PIVX_BLOCKSTATECATCHER_H
+#ifndef KROVACOIN_BLOCKSTATECATCHER_H
+#define KROVACOIN_BLOCKSTATECATCHER_H
 
 #include "consensus/validation.h"
 #include "validationinterface.h"
@@ -34,4 +34,4 @@ protected:
     };
 };
 
-#endif //PIVX_BLOCKSTATECATCHER_H
+#endif //KROVACOIN_BLOCKSTATECATCHER_H

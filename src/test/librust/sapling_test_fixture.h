@@ -1,11 +1,11 @@
-// Copyright (c) 2020-2021 The PIVX Core developers
+// Copyright (c) 2020-2021 The KROVACOIN Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_SAPLING_TEST_FIXTURE_H
-#define PIVX_SAPLING_TEST_FIXTURE_H
+#ifndef KROVACOIN_SAPLING_TEST_FIXTURE_H
+#define KROVACOIN_SAPLING_TEST_FIXTURE_H
 
-#include "test/test_pivx.h"
+#include "test/test_krova.h"
 
 /**
  * Testing setup that configures a complete environment for Sapling testing.
@@ -25,4 +25,4 @@ struct SaplingRegTestingSetup : public SaplingTestingSetup
 };
 
 
-#endif //PIVX_SAPLING_TEST_FIXTURE_H
+#endif //KROVACOIN_SAPLING_TEST_FIXTURE_H

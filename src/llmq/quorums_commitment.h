@@ -1,10 +1,10 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2021 The PIVX Core developers
+// Copyright (c) 2021 The KROVACOIN Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_QUORUMS_COMMITMENT_H
-#define PIVX_QUORUMS_COMMITMENT_H
+#ifndef KROVACOIN_QUORUMS_COMMITMENT_H
+#define KROVACOIN_QUORUMS_COMMITMENT_H
 
 #include "bls/bls_wrapper.h"
 #include "consensus/params.h"
@@ -88,4 +88,4 @@ public:
 
 } // namespace llmq
 
-#endif // PIVX_QUORUMS_COMMITMENT_H
+#endif // KROVACOIN_QUORUMS_COMMITMENT_H

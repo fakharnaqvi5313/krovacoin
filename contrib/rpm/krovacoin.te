@@ -1,0 +1,81 @@
+policy_module(krovacoin, 1.100.1)
+
+########################################
+#
+# Declarations
+#
+
+type krovacoin_t;
+type krovacoin_exec_t;
+init_daemon_domain(krovacoin_t, krovacoin_exec_t)
+
+permissive krovacoin_t;
+
+type krovacoin_initrc_exec_t;
+init_script_file(krovacoin_initrc_exec_t)
+
+type krovacoin_conf_t;
+files_type(krovacoin_conf_t)
+
+type krovacoin_var_lib_t;
+files_type(krovacoin_var_lib_t)
+
+type krovacoin_var_run_t;
+files_type(krovacoin_var_run_t)
+
+type krovacoin_port_t;
+corenet_port(krovacoin_port_t)
+
+########################################
+#
+# krovacoin local policy
+#
+allow krovacoin_t self:process { fork };
+
+allow krovacoin_t self:fifo_file rw_fifo_file_perms;
+allow krovacoin_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(krovacoin_t, krovacoin_conf_t, krovacoin_conf_t)
+manage_files_pattern(krovacoin_t, krovacoin_conf_t, krovacoin_conf_t)
+
+manage_dirs_pattern(krovacoin_t, krovacoin_var_lib_t, krovacoin_var_lib_t)
+manage_files_pattern(krovacoin_t, krovacoin_var_lib_t, krovacoin_var_lib_t)
+files_var_lib_filetrans(krovacoin_t, krovacoin_var_lib_t, { dir file })
+
+manage_dirs_pattern(krovacoin_t, krovacoin_var_run_t, krovacoin_var_run_t)
+manage_files_pattern(krovacoin_t, krovacoin_var_run_t, krovacoin_var_run_t)
+
+sysnet_dns_name_resolve(krovacoin_t)
+corenet_all_recvfrom_unlabeled(krovacoin_t)
+
+allow krovacoin_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(krovacoin_t)
+corenet_tcp_sendrecv_generic_node(krovacoin_t)
+corenet_tcp_sendrecv_all_ports(krovacoin_t)
+corenet_tcp_bind_generic_node(krovacoin_t)
+
+gen_require(`
+    type krovacoin_port_t;
+')
+allow krovacoin_t krovacoin_port_t:tcp_socket name_bind;
+
+gen_require(`
+    type krovacoin_port_t;
+')
+allow krovacoin_t krovacoin_port_t:tcp_socket name_connect;
+
+domain_use_interactive_fds(krovacoin_t)
+
+files_read_etc_files(krovacoin_t)
+
+miscfiles_read_localization(krovacoin_t)
+
+sysnet_dns_name_resolve(krovacoin_t)
+
+allow krovacoin_t krovacoin_exec_t:file execute_no_trans;
+allow krovacoin_t self:process setsched;
+corecmd_exec_ls(krovacoin_t)
+corenet_tcp_connect_http_port(krovacoin_t)
+dev_read_urand(krovacoin_t)
+fs_getattr_xattr_fs(krovacoin_t)
+kernel_read_system_state(krovacoin_t)

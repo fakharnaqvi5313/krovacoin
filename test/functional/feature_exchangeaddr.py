@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 The PIVX Core developers
+# Copyright (c) 2024 The KROVACOIN Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test OP_EXCHANGEADDR.
@@ -15,14 +15,14 @@ and not capable
 
 from decimal import Decimal
 
-from test_framework.test_framework import PivxTestFramework
+from test_framework.test_framework import KrovacoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.script import CScript, OP_NOP, OP_CHECKSIG
 from test_framework.messages import CTransaction, CTxIn, CTxOut, COutPoint, ToHex
 
 FEATURE_PRE_SPLIT_KEYPOOL = 169900
 
-class ExchangeAddrTest(PivxTestFramework):
+class ExchangeAddrTest(KrovacoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [['-whitelist=127.0.0.1','-regtest'], ['-regtest']]

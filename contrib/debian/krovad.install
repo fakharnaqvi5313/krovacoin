@@ -1,0 +1,3 @@
+usr/local/bin/krovad usr/bin
+usr/local/bin/krova-cli usr/bin
+debian/examples/krovacoin.conf etc/krovacoin
