@@ -416,14 +416,17 @@ int atoi(const std::string& str)
 
 
 /** Upper bound for mantissa.
-* 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
-* Larger integers cannot consist of arbitrary combinations of 0-9:
-*
-*   999999999999999999  1^18-1
-*  9223372036854775807  (1<<63)-1  (max int64_t)
-*  9999999999999999999  1^19-1     (would overflow)
+* Upstream uses 10^18-1 here (max arbitrary-digit decimal that fits in int64_t),
+* which comfortably covers Bitcoin/PIVX-scale supplies. KrovaCoin's 72,000,000,000
+* KROV supply needs raw base-unit amounts up to 7.2e18, which exceeds that bound,
+* so individual premine allocation UTXOs (e.g. the 25.2B KROV Staking Rewards Pool)
+* would fail to parse via RPC (task 7). 9*10^18 is not an all-9s bound like the
+* original, so the per-digit overflow check below can transiently overshoot it by
+* up to 9 during accumulation - harmless, since 9*10^18+9 is still far under
+* INT64_MAX (9223372036854775807), and the final bounds check after parsing still
+* enforces the true limit exactly.
 */
-static const int64_t UPPER_BOUND = 1000000000000000000LL - 1LL;
+static const int64_t UPPER_BOUND = 9000000000000000000LL;
 
 /** Helper function for ParseFixedPoint */
 static inline bool ProcessMantissaDigit(char ch, int64_t &mantissa, int &mantissa_tzeros)
@@ -517,8 +520,14 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     exponent += decimals;
     if (exponent < 0)
         return false; /* cannot represent values smaller than 10^-decimals */
-    if (exponent >= 18)
-        return false; /* cannot represent values larger than or equal to 10^(18-decimals) */
+    // UPPER_BOUND is now a 19-digit value (see above), so the smallest nonzero
+    // mantissa (1) can be shifted up to 18 places and still fit (1*10^18 <
+    // UPPER_BOUND); this bound must track UPPER_BOUND's digit count or values
+    // like "10000000000.00000000" (all trailing zeros, so the scaling is
+    // deferred entirely into this exponent shift rather than the mantissa
+    // accumulation) get rejected even though they're well within range.
+    if (exponent >= 19)
+        return false; /* cannot represent values larger than or equal to 10^(19-decimals) */
 
     for (int i=0; i < exponent; ++i) {
         if (mantissa > (UPPER_BOUND / 10LL) || mantissa < -(UPPER_BOUND / 10LL))

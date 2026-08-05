@@ -234,7 +234,7 @@ public:
         consensus.powLimit   = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV1 = uint256S("0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nBudgetCycleBlocks = 43200;       // approx. 1 every 30 days
+        consensus.nBudgetCycleBlocks = 1440;        // Staking Rewards Pool superblock cycle: ~daily at 60s blocks (task 7)
         consensus.nBudgetFeeConfirmations = 6;      // Number of confirmations for the finalization fee
         consensus.nCoinbaseMaturity = 100;
         consensus.nFutureTimeDriftPoW = 7200;
@@ -396,7 +396,7 @@ public:
         consensus.powLimit   = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV1 = uint256S("0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nBudgetCycleBlocks = 144;         // approx 10 cycles per day
+        consensus.nBudgetCycleBlocks = 50;          // shortened for testnet iteration speed (task 7 superblock cycle)
         consensus.nBudgetFeeConfirmations = 3;      // (only 8-blocks window for finalization on testnet)
         consensus.nCoinbaseMaturity = 15;
         consensus.nFutureTimeDriftPoW = 7200;
@@ -543,9 +543,9 @@ public:
         consensus.powLimit   = uint256S("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV1 = uint256S("0x000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nBudgetCycleBlocks = 144;         // approx 10 cycles per day
+        consensus.nBudgetCycleBlocks = 10;          // shortened for fast regtest iteration (task 7 superblock cycle)
         consensus.nBudgetFeeConfirmations = 3;      // (only 8-blocks window for finalization on regtest)
-        consensus.nCoinbaseMaturity = 100;
+        consensus.nCoinbaseMaturity = 2;
         consensus.nFutureTimeDriftPoW = 7200;
         consensus.nFutureTimeDriftPoS = 180;
         consensus.nMaxMoneyOut = 72000000000LL * COIN;
@@ -555,7 +555,7 @@ public:
         consensus.nMNCollateralMinConf = 1;
         consensus.nProposalEstablishmentTime = 60 * 5;  // at least 5 min old to make it into a budget
         consensus.nStakeMinAge = 0;
-        consensus.nStakeMinDepth = 20;
+        consensus.nStakeMinDepth = 3;
         consensus.nTargetTimespan = 40 * 60;
         consensus.nTargetTimespanV2 = 30 * 60;
         consensus.nTargetSpacing = 1 * 60;
@@ -599,15 +599,15 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        // Blocks 1-101 stay PoW (block-1 premine + coinbase-maturity/stake-depth window); PoS from 102.
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 102; // coinbase maturity needs STRICTLY > nCoinbaseMaturity=100 confirmations, so +2 not +1
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 102;
+        // Blocks 1-3 stay PoW (block-1 premine + coinbase-maturity/stake-depth window); PoS from 4.
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 4; // max(nCoinbaseMaturity=2, nStakeMinDepth=3)+1, shortened for regtest superblock testing
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 4;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         =
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 102; // must not precede UPGRADE_POS: AddToBlockIndex assumes vtx[1] is a coinstake once active
+        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 4;
         consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          =
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;

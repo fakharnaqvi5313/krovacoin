@@ -8,6 +8,8 @@
 #include "amount.h"
 #include "primitives/transaction.h"
 
+#include <cassert>
+#include <cstring>
 #include <vector>
 
 /**
@@ -38,12 +40,36 @@ static const PremineAllocation vPremineAllocations[] = {
 };
 static const size_t NUM_PREMINE_ALLOCATIONS = sizeof(vPremineAllocations) / sizeof(vPremineAllocations[0]);
 
+// The Staking Rewards Pool is always allocation index 0 -- exposed by name so
+// dependent code (e.g. consensus/superblock.cpp, task 7) doesn't hardcode the
+// index and silently break if the table is ever reordered.
+inline const PremineAllocation& GetStakingRewardsPoolAllocation()
+{
+    assert(strcmp(vPremineAllocations[0].name, "StakingRewardsPool") == 0);
+    return vPremineAllocations[0];
+}
+
+// The Team/Founders allocation is always allocation index 2 -- exposed by name
+// for the same reason as GetStakingRewardsPoolAllocation() above. Its
+// scriptPubKeyHex here is used only as the destination pubkey hash for the
+// vesting schedule; the block-1 coinbase does not actually pay this address
+// directly (see consensus/vesting.h, task 9).
+inline const PremineAllocation& GetTeamFoundersAllocation()
+{
+    assert(strcmp(vPremineAllocations[2].name, "TeamFounders") == 0);
+    return vPremineAllocations[2];
+}
+
 // Sum of all allocations. Asserts on overflow -- this must always equal exactly
 // 72,000,000,000 * COIN; a mismatch here means the allocation table itself is broken
 // and the node must refuse to run rather than silently mint the wrong supply.
 CAmount GetPremineTotal();
 
-// The block-1 coinbase outputs corresponding to vPremineAllocations, in table order.
+// The block-1 coinbase outputs. Five of the six vPremineAllocations entries
+// (all but TeamFounders) become one plain output each, in table order.
+// TeamFounders is instead split into 36 CLTV-locked vesting tranche outputs
+// (see consensus/vesting.h, task 9), appended after the five plain outputs --
+// so the coinbase has 41 outputs total, not 6.
 std::vector<CTxOut> GetPremineOutputs();
 
 // Consensus check: does this coinbase transaction exactly match the required

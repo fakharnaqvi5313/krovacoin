@@ -32,6 +32,7 @@
 #include "llmq/quorums_chainlocks.h"
 #include "masternode-payments.h"
 #include "consensus/premine.h"
+#include "consensus/superblock.h"
 #include "masternodeman.h"
 #include "policy/policy.h"
 #include "pow.h"
@@ -1509,6 +1510,29 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     precomTxData.reserve(block.vtx.size()); // Required so that pointers to individual precomTxData don't get invalidated
     bool fInitialBlockDownload = IsInitialBlockDownload();
     bool fSaplingMaintenance =  (block.nTime > sporkManager.GetSporkValue(SPORK_20_SAPLING_MAINTENANCE));
+
+    // Staking Rewards Pool superblocks: at each cycle boundary, the block must
+    // contain a transaction that spends the pool's current coin and pays
+    // stakers exactly per the schedule (see consensus/superblock.h, task 7).
+    // This MUST run before the main per-tx loop below: CheckSuperblockPayoutTx
+    // looks up the payout tx's own input via view.AccessCoin(), and the main
+    // loop's UpdateCoins() calls mark every tx's inputs spent in `view` as it
+    // goes -- checking afterwards would find the payout tx's own input already
+    // spent (by its own inclusion in this same block) and always reject it.
+    if (IsSuperblockHeight(pindex->nHeight)) {
+        bool foundValidPayout = false;
+        for (const auto& ptx : block.vtx) {
+            if (CheckSuperblockPayoutTx(*ptx, pindex->nHeight, view)) {
+                foundValidPayout = true;
+                break;
+            }
+        }
+        if (!foundValidPayout && GetSuperblockPayout(pindex->nHeight) > 0 && CycleHasStakers(pindex->nHeight)) {
+            return state.DoS(100, error("%s: superblock at height %d missing required pool payout", __func__, pindex->nHeight),
+                             REJECT_INVALID, "bad-superblock-payout");
+        }
+    }
+
     for (unsigned int i = 0; i < block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
 

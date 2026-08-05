@@ -7,6 +7,8 @@
 
 #include "amount.h"
 #include "blockassembler.h"
+#include "consensus/premine.h"
+#include "consensus/superblock.h"
 #include "chainparams.h"
 #include "core_io.h"
 #include "key_io.h"
@@ -197,6 +199,88 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
 }
 
 #endif // ENABLE_WALLET
+
+// Not gated behind ENABLE_MINING_RPC (disabled by default) -- this is a
+// read-only diagnostic/tooling command, not a mining control, and the pool
+// payout operator needs it available in normal builds.
+UniValue getsuperblockinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "getsuperblockinfo height ( pool_balance )\n"
+            "\nReturns the Staking Rewards Pool payout required at the given height, if any\n"
+            "(see consensus/superblock.h). Intended for the pool payout operator's tooling: build\n"
+            "a raw transaction spending the pool's current coin with these exact outputs, sign it\n"
+            "with the pool key, and broadcast it before this height is mined -- ConnectBlock will\n"
+            "reject the block at a superblock height without a matching payout transaction.\n"
+
+            "\nArguments:\n"
+            "1. height        (numeric, required)\n"
+            "2. pool_balance  (numeric, optional) the pool coin's real current value (e.g. from\n"
+            "                 listunspent on the pool address); if omitted, only the per-staker\n"
+            "                 amounts are returned and the change-back-to-pool output is left out,\n"
+            "                 since it can't be computed without the real balance.\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"isSuperblockHeight\": true|false,\n"
+            "  \"cycleIndex\": n,\n"
+            "  \"scheduledPayout\": xxx.xxxxxxxx,\n"
+            "  \"cycleHasStakers\": true|false,\n"
+            "  \"outputs\": [ {\"address\":\"...\",\"amount\":xxx.xxxxxxxx}, ... ]\n"
+            "}\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("getsuperblockinfo", "1440") + HelpExampleRpc("getsuperblockinfo", "1440"));
+
+    LOCK(cs_main);
+
+    int nHeight = request.params[0].get_int();
+    UniValue obj(UniValue::VOBJ);
+
+    bool isSbHeight = IsSuperblockHeight(nHeight);
+    obj.pushKV("isSuperblockHeight", isSbHeight);
+    if (!isSbHeight) return obj;
+
+    obj.pushKV("cycleIndex", GetSuperblockCycleIndex(nHeight));
+    CAmount targetPayout = GetSuperblockPayout(nHeight);
+    obj.pushKV("scheduledPayout", ValueFromAmount(targetPayout));
+    bool hasStakers = CycleHasStakers(nHeight);
+    obj.pushKV("cycleHasStakers", hasStakers);
+
+    UniValue outputs(UniValue::VARR);
+    if (hasStakers) {
+        const PremineAllocation& pool = GetStakingRewardsPoolAllocation();
+        std::vector<unsigned char> poolScriptBytes = ParseHex(pool.scriptPubKeyHex);
+        CScript poolScript(poolScriptBytes.begin(), poolScriptBytes.end());
+
+        // Without the real pool balance we can still show exactly what each
+        // staker is owed (independent of the pool's total value); we just
+        // can't show the change-back-to-pool output, since that's
+        // (real balance - distributed) and we don't know the real balance.
+        bool havePoolBalance = request.params.size() == 2;
+        CAmount poolValue = havePoolBalance ? AmountFromValue(request.params[1]) : targetPayout;
+        std::vector<CTxOut> built;
+        if (BuildSuperblockPayoutOutputs(nHeight, poolScript, poolValue, built)) {
+            for (const CTxOut& out : built) {
+                bool isChangeOutput = (out.scriptPubKey == poolScript);
+                if (isChangeOutput && !havePoolBalance) continue; // see note above
+                UniValue o(UniValue::VOBJ);
+                CTxDestination dest;
+                if (ExtractDestination(out.scriptPubKey, dest)) {
+                    o.pushKV("address", EncodeDestination(dest));
+                } else {
+                    o.pushKV("scriptPubKey", HexStr(out.scriptPubKey));
+                }
+                o.pushKV("amount", ValueFromAmount(out.nValue));
+                if (isChangeOutput) o.pushKV("isPoolChange", true);
+                outputs.push_back(o);
+            }
+        }
+    }
+    obj.pushKV("outputs", outputs);
+    return obj;
+}
 
 #ifdef ENABLE_MINING_RPC
 /**
@@ -864,6 +948,7 @@ static const CRPCCommand commands[] =
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"nblocks"} },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,  {"txid","priority_delta","fee_delta"} },
+    { "mining",             "getsuperblockinfo",      &getsuperblockinfo,      true,  {"height","pool_balance"} },
 
     /** Not shown in help */
 #ifdef ENABLE_WALLET

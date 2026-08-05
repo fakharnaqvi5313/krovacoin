@@ -913,12 +913,29 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("0.000000001", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("-0.000000001", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("0.00000001000000001", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("-10000000000.00000000", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("10000000000.00000000", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("-10000000000.00000001", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("10000000000.00000001", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("-10000000000.00000009", 8, &amount));
-    BOOST_CHECK(!ParseFixedPoint("10000000000.00000009", 8, &amount));
+    // KrovaCoin's 72B KROV supply needs amounts up to nMaxMoneyOut (task 7); the
+    // parser's UPPER_BOUND was raised accordingly (see utilstrencodings.cpp), so
+    // 10 billion, and even the largest single premine allocation (25.2B KROV),
+    // now parse successfully where the old Bitcoin/PIVX-scale bound rejected them.
+    BOOST_CHECK(ParseFixedPoint("-10000000000.00000000", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("10000000000.00000000", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("-10000000000.00000001", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("10000000000.00000001", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("-10000000000.00000009", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("10000000000.00000009", 8, &amount));
+    BOOST_CHECK(ParseFixedPoint("25200000000.00000000", 8, &amount));
+    BOOST_CHECK_EQUAL(amount, 2520000000000000000LL);
+    // Exact regtest regression case that first surfaced this bug: a superblock
+    // payout change output back to the Staking Rewards Pool.
+    BOOST_CHECK(ParseFixedPoint("25193095890.41095890", 8, &amount));
+    BOOST_CHECK_EQUAL(amount, 2519309589041095890LL);
+    // New boundary: UPPER_BOUND is 9*10^18 raw units == 90,000,000,000 KROV.
+    BOOST_CHECK(ParseFixedPoint("90000000000.00000000", 8, &amount));
+    BOOST_CHECK_EQUAL(amount, 9000000000000000000LL);
+    BOOST_CHECK(ParseFixedPoint("-90000000000.00000000", 8, &amount));
+    BOOST_CHECK_EQUAL(amount, -9000000000000000000LL);
+    BOOST_CHECK(!ParseFixedPoint("90000000000.00000001", 8, &amount));
+    BOOST_CHECK(!ParseFixedPoint("-90000000000.00000001", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("-99999999999.99999999", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("99999909999.09999999", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("92233720368.54775807", 8, &amount));
