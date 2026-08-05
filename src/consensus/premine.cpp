@@ -13,7 +13,7 @@ CAmount GetPremineTotal()
 {
     CAmount total = 0;
     for (size_t i = 0; i < NUM_PREMINE_ALLOCATIONS; i++) {
-        bool ok = PremineCheckedAdd(total, vPremineAllocations[i].amount, total);
+        bool ok = CheckedAdd(total, vPremineAllocations[i].amount, total);
         assert(ok && "premine allocation table overflow");
     }
     assert(total == 72000000000LL * COIN && "premine allocation table must sum to exactly 72,000,000,000 KROV");

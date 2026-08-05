@@ -38,15 +38,6 @@ static const PremineAllocation vPremineAllocations[] = {
 };
 static const size_t NUM_PREMINE_ALLOCATIONS = sizeof(vPremineAllocations) / sizeof(vPremineAllocations[0]);
 
-// Overflow-safe addition -- see also task 8 (int64 overflow audit) for the general-purpose version.
-inline bool PremineCheckedAdd(CAmount a, CAmount b, CAmount& out)
-{
-    if (b > 0 && a > std::numeric_limits<CAmount>::max() - b) return false;
-    if (b < 0 && a < std::numeric_limits<CAmount>::min() - b) return false;
-    out = a + b;
-    return true;
-}
-
 // Sum of all allocations. Asserts on overflow -- this must always equal exactly
 // 72,000,000,000 * COIN; a mismatch here means the allocation table itself is broken
 // and the node must refuse to run rather than silently mint the wrong supply.

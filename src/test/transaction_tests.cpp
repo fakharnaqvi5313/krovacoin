@@ -9,6 +9,7 @@
 #include "test/data/tx_valid.json.h"
 
 #include "consensus/tx_verify.h"
+#include "consensus/premine.h"
 #include "clientversion.h"
 #include "checkqueue.h"
 #include "core_io.h"
@@ -487,4 +488,65 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(t, 0, reason));
 }
 
+BOOST_AUTO_TEST_CASE(tx_max_value_overflow)
+{
+    // KrovaCoin's MAX_MONEY (72e9 * COIN =~ 7.2e18) leaves only ~28% headroom under
+    // int64_t's max (~9.22e18) -- summing just two max-value outputs overflows.
+    // CheckTransaction must catch this (relying on the standard Bitcoin-lineage
+    // wraparound-then-MoneyRange-check pattern) rather than silently accept it.
+    // See task 8 (int64 overflow audit); this scenario is exactly the shape of bug
+    // that hit GetTotalBudget() for real during development.
+    const CAmount nMax = Params().GetConsensus().nMaxMoneyOut;
+    BOOST_CHECK_EQUAL(nMax, 72000000000LL * COIN);
+
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout.hash = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+    tx.vin[0].prevout.n = 0;
+    tx.vout.resize(2);
+    tx.vout[0].nValue = nMax;
+    tx.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    tx.vout[1].nValue = nMax;
+    tx.vout[1].scriptPubKey = CScript() << OP_TRUE;
+
+    CValidationState state;
+    BOOST_CHECK(!CheckTransaction(tx, state, false));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txns-txouttotal-toolarge");
+
+    // A single max-value output, on its own, must still be accepted.
+    CMutableTransaction txSingle;
+    txSingle.vin = tx.vin;
+    txSingle.vout.resize(1);
+    txSingle.vout[0].nValue = nMax;
+    txSingle.vout[0].scriptPubKey = CScript() << OP_TRUE;
+    CValidationState stateSingle;
+    BOOST_CHECK(CheckTransaction(txSingle, stateSingle, false));
+}
+
+BOOST_AUTO_TEST_CASE(checked_add_overflow)
+{
+    CAmount out;
+    const CAmount nMax = std::numeric_limits<CAmount>::max();
+    const CAmount nMin = std::numeric_limits<CAmount>::min();
+
+    // Ordinary in-range addition succeeds.
+    BOOST_CHECK(CheckedAdd(1000, 2000, out));
+    BOOST_CHECK_EQUAL(out, 3000);
+
+    // Positive overflow is detected, not silently wrapped.
+    BOOST_CHECK(!CheckedAdd(nMax, 1, out));
+    BOOST_CHECK(!CheckedAdd(nMax / 2 + 1, nMax / 2 + 1, out));
+
+    // Negative overflow (underflow) is detected too.
+    BOOST_CHECK(!CheckedAdd(nMin, -1, out));
+
+    // Exact boundary (no overflow) still succeeds.
+    BOOST_CHECK(CheckedAdd(nMax - 1, 1, out));
+    BOOST_CHECK_EQUAL(out, nMax);
+
+    // The actual premine total, summed via CheckedAdd, must equal exactly 72B KROV.
+    BOOST_CHECK_EQUAL(GetPremineTotal(), 72000000000LL * COIN);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+

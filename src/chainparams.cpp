@@ -220,8 +220,6 @@ public:
     {
         strNetworkID = "main";
 
-        fprintf(stderr, "SAPLING_EMPTY_ROOT=%s\n", SaplingMerkleTree::empty_root().ToString().c_str());
-
         // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
         // re-grind before any public launch (see GENESIS_PUBKEY_HEX comment above).
         genesis = CreateGenesisBlock("KrovaCoin genesis - TODO insert verifiable Aug 2026 headline before public launch (see launch plan)",
