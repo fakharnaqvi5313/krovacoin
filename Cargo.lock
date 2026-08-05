@@ -342,7 +342,7 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 [[package]]
 name = "equihash"
 version = "0.2.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "f4jumble"
 version = "0.1.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "blake2b_simd",
 ]
@@ -1054,7 +1054,7 @@ dependencies = [
 [[package]]
 name = "zcash_address"
 version = "0.2.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "bech32",
  "bs58",
@@ -1065,7 +1065,7 @@ dependencies = [
 [[package]]
 name = "zcash_encoding"
 version = "0.2.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "byteorder",
  "nonempty",
@@ -1087,7 +1087,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.11.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "aes",
  "bip0039",
@@ -1118,7 +1118,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.11.0"
-source = "git+https://github.com/KROVACOIN-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
+source = "git+https://github.com/PIVX-Project/librustzcash?rev=e7662b23d16c38595ef9ad1f3ae683b1f54dc732#e7662b23d16c38595ef9ad1f3ae683b1f54dc732"
 dependencies = [
  "bellman",
  "blake2b_simd",
