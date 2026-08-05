@@ -96,9 +96,20 @@ BOOST_AUTO_TEST_CASE(test_in_block_and_mempool_notes_double_spend)
     // Verify that we are at block 110
     tipHeight = WITH_LOCK(cs_main, return chainActive.Tip()->nHeight);
     BOOST_CHECK_EQUAL(tipHeight, nGenerateBlocks);
-    // Verify that the wallet has all of the coins
-    BOOST_CHECK_EQUAL(pwalletMain->GetAvailableBalance(), CAmount(250 * COIN * 10)); // 10 blocks available
-    BOOST_CHECK_EQUAL(pwalletMain->GetImmatureBalance(), CAmount(250 * COIN * 100)); // 100 blocks immature
+    // Ordinary blocks mint 0 KROV (zero-inflation design -- see GetBlockValue()
+    // in validation.cpp), so none of the blocks just mined (nor the 100 from
+    // TestChain100Setup's own setup) actually fund the wallet anymore. Fund it
+    // with a real, deterministic, immediately-available transaction instead,
+    // enough for the shielding operation below.
+    FundOutput(scriptPubKey, CAmount(2500 * COIN));
+    // SaplingOperation's transparent coin selection needs more than the 1
+    // confirmation FundOutput's own block gives it -- mine a few more.
+    for (int i = 0; i < 10; ++i) {
+        CreateAndProcessBlock({}, scriptPubKey);
+    }
+    SyncWithValidationInterfaceQueue();
+    BOOST_CHECK_EQUAL(pwalletMain->GetAvailableBalance(), CAmount(2500 * COIN));
+    BOOST_CHECK_EQUAL(pwalletMain->GetImmatureBalance(), CAmount(0));
 
     // Now that we have the chain, let's shield 100 PIVs
     // single recipient

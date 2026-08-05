@@ -351,7 +351,13 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     CBlockIndex* const nullBlock = nullptr;
     CBlockIndex* oldTip = chainActive.Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
-    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    // Ordinary blocks mint 0 KROV (zero-inflation design), so the new block's
+    // own coinbase can't fund the wallet here as it once did -- FundOutput
+    // still mines exactly one new block (satisfying "new block in a new block
+    // file"), but pays coinbaseKey via a real, non-coinbase transaction inside
+    // it instead, which ScanForWalletTransactions must still pick up the same
+    // way.
+    FundOutput(coinbaseKey, 500 * COIN);
     CBlockIndex* newTip = chainActive.Tip();
 
     LOCK(cs_main);
@@ -365,7 +371,8 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
         BOOST_CHECK_EQUAL(nullBlock, wallet.ScanForWalletTransactions(oldTip, nullptr, reserver));
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 500 * COIN);
+        // A real (non-coinbase) funding transaction, not an immature coinbase.
+        BOOST_CHECK_EQUAL(wallet.GetAvailableBalance(), 500 * COIN);
     }
 
     // !TODO: Prune the older block file.

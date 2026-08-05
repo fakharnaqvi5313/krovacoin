@@ -8,6 +8,7 @@
 #include "test/test_krova.h"
 
 #include "blockassembler.h"
+#include "coins.h"
 #include "consensus/merkle.h"
 #include "bls/bls_wrapper.h"
 #include "guiinterface.h"
@@ -216,6 +217,36 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(scriptKey.GetPubKey()) << OP_CHECKSIG;
     return CreateBlock(txns, scriptPubKey, fTestBlockValidity);
+}
+
+CTransactionRef TestChainSetup::FundOutput(const CScript& scriptPubKeyOut, CAmount amount)
+{
+    static unsigned int nFundOutputSeedCounter = 0;
+    CMutableTransaction seedTx;
+    seedTx.vin.resize(1);
+    seedTx.vin[0].prevout.SetNull();
+    seedTx.vin[0].scriptSig = CScript() << CScriptNum(++nFundOutputSeedCounter) << OP_0;
+    seedTx.vout.resize(1);
+    seedTx.vout[0].nValue = amount;
+    seedTx.vout[0].scriptPubKey = CScript(); // anyone-can-spend seed, redeemed below
+    CTransactionRef seedRef = MakeTransactionRef(seedTx);
+    WITH_LOCK(cs_main, pcoinsTip->AddCoin(COutPoint(seedRef->GetHash(), 0), Coin(seedRef->vout[0], 1, /*fCoinBase=*/false, /*fCoinStake=*/false), false));
+
+    CMutableTransaction fundTx;
+    fundTx.vin.resize(1);
+    fundTx.vin[0].prevout = COutPoint(seedRef->GetHash(), 0);
+    fundTx.vin[0].scriptSig = CScript() << OP_1;
+    fundTx.vout.resize(1);
+    fundTx.vout[0].nValue = amount;
+    fundTx.vout[0].scriptPubKey = scriptPubKeyOut;
+
+    CBlock block = CreateAndProcessBlock({fundTx}, CScript());
+    return block.vtx[1];
+}
+
+CTransactionRef TestChainSetup::FundOutput(const CKey& key, CAmount amount)
+{
+    return FundOutput(CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG, amount);
 }
 
 std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)

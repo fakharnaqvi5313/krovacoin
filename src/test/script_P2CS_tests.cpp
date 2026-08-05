@@ -57,8 +57,12 @@ BOOST_AUTO_TEST_CASE(extract_cold_staking_destination_keys)
 
 static CScript GetNewP2CS(CKey& stakerKey, CKey& ownerKey, bool fLastOutFree)
 {
-    stakerKey = KeyIO::DecodeSecret("YNdsth3BsW53DYmCiR12SofWSAt2utXQUSGoin3PekVQCMbzfS7E");
-    ownerKey = KeyIO::DecodeSecret("YUo8oW3y8cUQdQxQxCdnUJ4Ww5H7nHBEMwD2bNDpBbuLM59t4rvd");
+    // Generated live rather than frozen WIF literals -- these tests only need
+    // internally-consistent keys within a single run, not a fixed identity,
+    // and the previous hardcoded strings were never re-encoded for KROV's WIF
+    // prefix, so they no longer decode as valid keys.
+    stakerKey.MakeNewKey(true);
+    ownerKey.MakeNewKey(true);
     return fLastOutFree ? GetScriptForStakeDelegationLOF(stakerKey.GetPubKey().GetID(), ownerKey.GetPubKey().GetID())
                         : GetScriptForStakeDelegation(stakerKey.GetPubKey().GetID(), ownerKey.GetPubKey().GetID());
 }
@@ -147,7 +151,8 @@ BOOST_AUTO_TEST_CASE(coldstake_lof_script)
     SignColdStake(tx, 0, scriptP2CS, stakerKey, true);
     BOOST_CHECK(CheckP2CSScript(tx.vin[0].scriptSig, scriptP2CS, tx, err));
 
-    const CKey& dummyKey = KeyIO::DecodeSecret("YNdsth3BsW53DYmCiR12SofWSAt2utXQUSGoin3PekVQCMbzfS7E");
+    CKey dummyKey;
+    dummyKey.MakeNewKey(true);
     const CKeyID& dummyKeyID = dummyKey.GetPubKey().GetID();
     const CScript& dummyP2PKH = GetDummyP2PKH(dummyKeyID);
 
@@ -223,7 +228,8 @@ BOOST_AUTO_TEST_CASE(coldstake_script)
     SignColdStake(tx, 0, scriptP2CS, stakerKey, true);
     BOOST_CHECK(CheckP2CSScript(tx.vin[0].scriptSig, scriptP2CS, tx, err));
 
-    const CKey& dummyKey = KeyIO::DecodeSecret("YNdsth3BsW53DYmCiR12SofWSAt2utXQUSGoin3PekVQCMbzfS7E");
+    CKey dummyKey;
+    dummyKey.MakeNewKey(true);
     const CKeyID& dummyKeyID = dummyKey.GetPubKey().GetID();
     const CScript& dummyP2PKH = GetDummyP2PKH(dummyKeyID);
 

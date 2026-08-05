@@ -113,6 +113,17 @@ struct TestChainSetup : public TestingSetup
                        CBlockIndex* customPrevBlock = nullptr);
     CBlock CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey, bool fTestBlockValidity = true);
 
+    // Ordinary blocks mint 0 KROV (zero-inflation design -- see GetBlockValue()
+    // in validation.cpp) and height 1's coinbase is the real, fixed premine
+    // structure (not owned by any test key), so a fresh test chain otherwise
+    // has no way to give a wallet real, rescan-discoverable funds. This seeds
+    // a synthetic already-mature coin directly into the UTXO set, then spends
+    // it in a real mined block paying scriptPubKeyOut, returning that
+    // transaction. Use this wherever a test previously relied on mined-coinbase
+    // value to fund a wallet.
+    CTransactionRef FundOutput(const CScript& scriptPubKeyOut, CAmount amount);
+    CTransactionRef FundOutput(const CKey& key, CAmount amount);
+
     std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };

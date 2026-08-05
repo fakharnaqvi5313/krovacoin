@@ -31,14 +31,21 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
 
-    // Create a double-spend of mature coinbase txn:
+    // coinbaseTxns[0] (height 1) is the fixed 72B premine coinbase, not owned
+    // by coinbaseKey (see consensus/premine.h) -- and ordinary heights mint 0
+    // KROV (zero-inflation design), so neither can supply a real, correctly-
+    // owned spendable coin the way this test originally assumed. Fund one
+    // directly instead.
+    CTransactionRef fundTx = FundOutput(coinbaseKey, 1 * COIN);
+
+    // Create a double-spend of that funded output:
     std::vector<CMutableTransaction> spends;
     spends.resize(2);
     for (int i = 0; i < 2; i++)
     {
         spends[i].nVersion = 1;
         spends[i].vin.resize(1);
-        spends[i].vin[0].prevout.hash = coinbaseTxns[0].GetHash();
+        spends[i].vin[0].prevout.hash = fundTx->GetHash();
         spends[i].vin[0].prevout.n = 0;
         spends[i].vout.resize(1);
         spends[i].vout[0].nValue = 11*CENT;

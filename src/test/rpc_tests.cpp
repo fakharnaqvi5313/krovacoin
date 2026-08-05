@@ -6,8 +6,10 @@
 #include "rpc/server.h"
 #include "rpc/client.h"
 
+#include "key_io.h"
 #include "netbase.h"
 #include "util/system.h"
+#include "utilstrencodings.h"
 
 #include "test/test_krova.h"
 
@@ -119,16 +121,29 @@ BOOST_AUTO_TEST_CASE(rpc_togglenetwork)
 BOOST_AUTO_TEST_CASE(rpc_rawsign)
 {
     UniValue r;
-    // input is a 1-of-2 multisig (so is output):
+    // input is a 1-of-2 multisig (so is output). Keys, redeemScript, and its
+    // P2SH scriptPubKey are all generated live rather than frozen literals --
+    // the previous hardcoded WIF strings were never re-encoded for KROV's
+    // WIF prefix (only the address literal below got that fix at the time),
+    // so they silently stopped decoding as valid private keys.
+    CKey key1, key2;
+    key1.MakeNewKey(true);
+    key2.MakeNewKey(true);
+    CScript redeemScript = GetScriptForMultisig(1, {key1.GetPubKey(), key2.GetPubKey()});
+    CScript scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
     std::string prevout =
       "[{\"txid\":\"dd2888870cdc3f6e92661f6b0829667ee4bb07ed086c44205e726bbf3338f726\","
-      "\"vout\":1,\"scriptPubKey\":\"a914f5404a39a4799d8710e15db4c4512c5e06f97fed87\","
-      "\"redeemScript\":\"5121021431a18c7039660cd9e3612a2a47dc53b69cb38ea4ad743b7df8245fd0438f8e21029bbeff390ce736bd396af43b52a1c14ed52c086b1e5585c15931f68725772bac52ae\"}]";
+      "\"vout\":1,\"scriptPubKey\":\""+HexStr(scriptPubKey)+"\","
+      "\"redeemScript\":\""+HexStr(redeemScript)+"\"}]";
+    // Destination address doesn't need to correspond to a real key here --
+    // just needs to be a well-formed KROV address for this network. Computed
+    // live (rather than a frozen literal) so it can't go stale on a future
+    // address-prefix change.
     r = CallRPC(std::string("createrawtransaction ")+prevout+" "+
-      "{\"6ckcNMWRYgTnPcrTXCdwhDnMLwj3zwseej\":1}");
+      "{\""+EncodeDestination(CKeyID())+"\":1}");
     std::string notsigned = r.get_str();
-    std::string privkey1 = "\"YVobcS47fr6kceZy9LzLJR8WQ6YRpUwYKoJhrnEXepebMxaSpbnn\"";
-    std::string privkey2 = "\"YRyMjG8hbm8jHeDMAfrzSeHq5GgAj7kuHFvJtMudCUH3sCkq1WtA\"";
+    std::string privkey1 = "\""+KeyIO::EncodeSecret(key1)+"\"";
+    std::string privkey2 = "\""+KeyIO::EncodeSecret(key2)+"\"";
     r = CallRPC(std::string("signrawtransaction ")+notsigned+" "+prevout+" "+"[]");
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == false);
     r = CallRPC(std::string("signrawtransaction ")+notsigned+" "+prevout+" "+"["+privkey1+","+privkey2+"]");

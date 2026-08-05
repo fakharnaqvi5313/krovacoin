@@ -7,6 +7,7 @@
 
 #include "blockassembler.h"
 #include "checkpoints.h"
+#include "coins.h"
 #include "consensus/merkle.h"
 #include "miner.h"
 #include "pow.h"
@@ -39,7 +40,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     CMutableTransaction tx;
     tx.vin.resize(1);
     tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL - 1000;
@@ -48,7 +49,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     mempool.addUnchecked(hashParentTx, entry.Fee(1000).Time(GetTime()).SpendsCoinbaseOrCoinstake(true).FromTx(tx));
 
     // This tx has a medium fee: 10000 satoshis
-    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     uint256 hashMediumFeeTx = tx.GetHash();
     mempool.addUnchecked(hashMediumFeeTx, entry.Fee(10000).Time(GetTime()).SpendsCoinbaseOrCoinstake(true).FromTx(tx));
@@ -101,7 +102,7 @@ void TestPackageSelection(const CChainParams& chainparams, CScript scriptPubKey,
     // Test that transaction selection properly updates ancestor fee
     // calculations as ancestor transactions get included in a block.
     // Add a 0-fee transaction that has 2 outputs.
-    tx.vin[0].prevout.hash = txFirst[3]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout.resize(2);
     tx.vout[0].nValue = 5000000000LL - 100000000;
     tx.vout[1].nValue = 100000000; // 1BTC output
@@ -163,15 +164,17 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Set genesis block
     pblocktemplate->block.hashPrevBlock = chainparams.GetConsensus().hashGenesisBlock;
 
-    // We can't make transactions until we have inputs
-    // Therefore, load 100 blocks :)
-    // txFirst[0] (height 1) is the real 72B premine coinbase -- its outputs
-    // are real, cryptographically-locked P2PKH/CLTV scripts, not spendable by
-    // the placeholder OP_1-style scriptSigs used throughout this file. Every
-    // txFirst[N] reference below is deliberately N+1 relative to upstream, to
-    // skip it and land on height 2+'s coinbase, which still uses an
-    // anyone-can-spend empty scriptPubKey (see CreateCoinbaseTx).
-    std::vector<CTransactionRef>txFirst;
+    // Advance the chain 100 blocks so height/time-dependent logic elsewhere
+    // in this test (maturity, median-time-past locktimes, etc.) has a
+    // realistic tip to work against.
+    //
+    // These blocks are NOT used as this test's source of spendable funds:
+    // KrovaCoin mints no ordinary per-block reward (task 6 -- GetBlockValue()
+    // is 0 past height 1), and height 1's own coinbase is the real 72B
+    // premine (task 5) with genuine cryptographically-locked P2PKH/CLTV
+    // outputs, not the placeholder-spendable coinbase upstream tests expect.
+    // Instead, txFirst below is populated with synthetic, test-controlled
+    // "coinbases" injected directly into the UTXO set further down.
     std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block); // pointer for convenience
     for (unsigned int i = 0; i < NUM_BOOTSTRAP_BLOCKS; ++i) {
         CBlockIndex* pindexPrev = WITH_LOCK(cs_main, return chainActive.Tip());
@@ -179,8 +182,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->nTime = pindexPrev->GetMedianTimePast() + 60;
         pblock->vtx.clear(); // Update coinbase input height manually
         CreateCoinbaseTx(pblock.get(), CScript(), pindexPrev);
-        if (txFirst.size() < 4)
-            txFirst.emplace_back(pblock->vtx[0]);
         pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
         // Mine the nonce live against the network's actual PoW target, rather
         // than relying on a hardcoded table -- the premine/genesis content
@@ -198,6 +199,25 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         pblock->hashPrevBlock = pblock->GetHash();
     }
 
+    // Seed 4 synthetic, already-mature "coinbase" outputs directly into the
+    // UTXO set for this test's transactions to spend -- an empty scriptPubKey
+    // (anyone-can-spend, matching the placeholder OP_1-style scriptSigs used
+    // throughout this file) and a real value, since no real block in this
+    // chain can offer both at once anymore.
+    std::vector<CTransactionRef> txFirst;
+    for (unsigned int i = 0; i < 4; ++i) {
+        CMutableTransaction fakeCoinbase;
+        fakeCoinbase.vin.resize(1);
+        fakeCoinbase.vin[0].prevout.SetNull();
+        fakeCoinbase.vin[0].scriptSig = CScript() << CScriptNum(i) << OP_0;
+        fakeCoinbase.vout.resize(1);
+        fakeCoinbase.vout[0].nValue = 5000000000LL; // 50 COIN
+        fakeCoinbase.vout[0].scriptPubKey = CScript();
+        CTransactionRef txRef = MakeTransactionRef(fakeCoinbase);
+        WITH_LOCK(cs_main, pcoinsTip->AddCoin(COutPoint(txRef->GetHash(), 0), Coin(txRef->vout[0], 1, /*fCoinBase=*/true, /*fCoinStake=*/false), false));
+        txFirst.emplace_back(txRef);
+    }
+
     // Just to make sure we can still make simple blocks
     BOOST_CHECK(pblocktemplate = BlockAssembler(Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(scriptPubKey, &m_wallet, false));
 
@@ -205,7 +225,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin.resize(1);
     // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
     tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL;
@@ -220,7 +240,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK_EXCEPTION(pblocktemplate = BlockAssembler(Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(scriptPubKey, &m_wallet, false), std::runtime_error, HasReason("bad-blk-sigops"));
     mempool.clear();
 
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vout[0].nValue = 5000000000LL;
     for (unsigned int i = 0; i < 1001; ++i) {
         tx.vout[0].nValue -= 1000000;
@@ -240,7 +260,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     for (unsigned int i = 0; i < 18; ++i)
         tx.vin[0].scriptSig << vchData << OP_DROP;
     tx.vin[0].scriptSig << OP_1;
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout[0].nValue = 5000000000LL;
     for (unsigned int i = 0; i < 215; ++i) {
@@ -261,14 +281,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // child with higher feerate than parent
     tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 4900000000LL;
     hash = tx.GetHash();
     mempool.addUnchecked(hash, entry.Fee(100000000LL).Time(GetTime()).SpendsCoinbaseOrCoinstake(true).FromTx(tx));
     tx.vin[0].prevout.hash = hash;
     tx.vin.resize(2);
     tx.vin[1].scriptSig = CScript() << OP_1;
-    tx.vin[1].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[1].prevout.hash = txFirst[0]->GetHash();
     tx.vin[1].prevout.n = 0;
     tx.vout[0].nValue = 5900000000LL;
     hash = tx.GetHash();
@@ -288,7 +308,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // invalid (pre-p2sh) txn in mempool, template creation fails
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout[0].nValue = 4900000000LL;
@@ -306,7 +326,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     mempool.clear();
 
     // double spend txn pair in mempool, template creation fails
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout[0].nValue = 4900000000LL;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
@@ -322,7 +342,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(WITH_LOCK(cs_main, return chainActive.Tip()->GetMedianTimePast()+1));
 
     // height locked
-    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vin[0].nSequence = 0;
     tx.vout[0].nValue = 4900000000LL;
@@ -334,7 +354,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // time locked
     tx2.vin.resize(1);
-    tx2.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx2.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx2.vin[0].prevout.n = 0;
     tx2.vin[0].scriptSig = CScript() << OP_1;
     tx2.vin[0].nSequence = 0;
