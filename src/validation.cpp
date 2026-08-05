@@ -31,6 +31,7 @@
 #include "legacy/validation_zerocoin_legacy.h"
 #include "llmq/quorums_chainlocks.h"
 #include "masternode-payments.h"
+#include "consensus/premine.h"
 #include "masternodeman.h"
 #include "policy/policy.h"
 #include "pow.h"
@@ -815,38 +816,15 @@ double ConvertBitsToDouble(unsigned int nBits)
 
 CAmount GetBlockValue(int nHeight)
 {
-    // Set V5.5 upgrade block for regtest as well as testnet and mainnet
-    const int nLast = Params().GetConsensus().vUpgrades[Consensus::UPGRADE_V5_5].nActivationHeight;
-
-    // Regtest block reward reduction schedule
-    if (Params().IsRegTestNet()) {
-        // Reduce regtest block value after V5.5 upgrade
-        if (nHeight > nLast) return 10 * COIN;
-        return 250 * COIN;
-    }
-    // Testnet high-inflation blocks [2, 200] with value 250k KROV
-    const bool isTestnet = Params().IsTestnet();
-    if (isTestnet && nHeight < 201 && nHeight > 1) {
-        return 250000 * COIN;
-    }
-    // Mainnet/Testnet block reward reduction schedule
-    const int nZerocoinV2 = Params().GetConsensus().vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight;
-    if (nHeight > nLast) return 10 * COIN;
-    if (nHeight > nZerocoinV2) return 5 * COIN;
-    if (nHeight > 648000) return 4.5 * COIN;
-    if (nHeight > 604800) return 9 * COIN;
-    if (nHeight > 561600) return 13.5 * COIN;
-    if (nHeight > 518400) return 18 * COIN;
-    if (nHeight > 475200) return 22.5 * COIN;
-    if (nHeight > 432000) return 27 * COIN;
-    if (nHeight > 388800) return 31.5 * COIN;
-    if (nHeight > 345600) return 36 * COIN;
-    if (nHeight > 302400) return 40.5 * COIN;
-    if (nHeight > 151200) return 45 * COIN;
-    if (nHeight > 86400) return 225 * COIN;
-    if (nHeight != 1) return 250 * COIN;
-    // Premine for 6 masternodes at block 1
-    return 60001 * COIN;
+    // Zero protocol inflation: the entire 72B supply is created once, in the block-1
+    // premine (see consensus/premine.h). Every other block mints nothing -- stakers
+    // are paid from tx fees plus the separately-allocated Staking Rewards Pool
+    // superblock payouts (see the budget/superblock rewards-pool logic), not from
+    // new coin issuance. Blocks 2..nStakeMinDepth are a one-time PoW bootstrap window
+    // (see UPGRADE_POS activation height) so the premine outputs can mature before
+    // PoS takes over; they also mint nothing.
+    if (nHeight == 1) return GetPremineTotal();
+    return 0;
 }
 
 int64_t GetMasternodePayment(int nHeight)
@@ -1643,6 +1621,13 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return state.DoS(100, error("%s: reward pays too much (actual=%s vs limit=%s)",
                                     __func__, FormatMoney(nMint), FormatMoney(nExpectedMint)),
                          REJECT_INVALID, "bad-blk-amount");
+    }
+
+    // Block 1 must exactly match the required 72B genesis allocation -- no more,
+    // no less, no substitute payee. See consensus/premine.h.
+    if (pindex->nHeight == 1 && !CheckPremineCoinbase(*block.vtx[0])) {
+        return state.DoS(100, error("%s: block 1 coinbase does not match the required premine allocation", __func__),
+                         REJECT_INVALID, "bad-premine-coinbase");
     }
 
     // Masternode/Budget payments

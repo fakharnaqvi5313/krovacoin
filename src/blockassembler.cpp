@@ -16,6 +16,7 @@
 #include "consensus/validation.h"
 #include "llmq/quorums_blockprocessor.h"
 #include "masternode-payments.h"
+#include "consensus/premine.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
@@ -111,6 +112,17 @@ CMutableTransaction CreateCoinbaseTx(const CScript& scriptPubKeyIn, CBlockIndex*
 {
     assert(pindexPrev);
     const int nHeight = pindexPrev->nHeight + 1;
+
+    // Block 1 carries the entire 72B genesis premine as fixed, consensus-enforced
+    // outputs (see consensus/premine.h) -- it ignores scriptPubKeyIn entirely, since
+    // the whole point is that the miner cannot redirect these funds to themselves.
+    if (nHeight == 1) {
+        CMutableTransaction txPremine;
+        txPremine.vin.emplace_back();
+        txPremine.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        txPremine.vout = GetPremineOutputs();
+        return txPremine;
+    }
 
     // Create coinbase tx
     CMutableTransaction txCoinbase = NewCoinbase(nHeight, &scriptPubKeyIn);

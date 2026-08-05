@@ -852,16 +852,14 @@ std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight)
 
 CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
-    // 100% of block reward after V5.5 upgrade
-    CAmount nSubsidy = GetBlockValue(nHeight);
-
-    // 20% of block reward prior to V5.5 upgrade
-    if (nHeight <= Params().GetConsensus().vUpgrades[Consensus::UPGRADE_V5_5].nActivationHeight) {
-        nSubsidy /= 5;
-    }
-
-    // multiplied by the number of blocks in a cycle (144 on testnet, 30*1440 on mainnet)
-    return nSubsidy * Params().GetConsensus().nBudgetCycleBlocks;
+    // KrovaCoin has zero protocol inflation (see GetBlockValue): there is no
+    // steady per-block reward to extrapolate a budget-cycle total from, and the
+    // legacy masternode community-proposal-voting budget this fed is not part of
+    // the design (see KrovaCoin_Launch_Plan.md / master prompt task 7 -- this
+    // machinery is being repurposed for Staking Rewards Pool superblock payouts
+    // instead, which use their own schedule in consensus/premine.h's sibling module,
+    // not this proposal-voting budget total).
+    return 0;
 }
 
 void CBudgetManager::AddSeenProposalVote(const CBudgetVote& vote)

@@ -8,6 +8,7 @@
 #include "chainparams.h"
 
 #include "chainparamsseeds.h"
+#include "sapling/incrementalmerkletree.h"
 #include "consensus/merkle.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
@@ -219,12 +220,15 @@ public:
     {
         strNetworkID = "main";
 
+        fprintf(stderr, "SAPLING_EMPTY_ROOT=%s\n", SaplingMerkleTree::empty_root().ToString().c_str());
+
         // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
         // re-grind before any public launch (see GENESIS_PUBKEY_HEX comment above).
         genesis = CreateGenesisBlock("KrovaCoin genesis - TODO insert verifiable Aug 2026 headline before public launch (see launch plan)",
-                                      1785931200, 336867, 0x1e0ffff0, 7, 0);
+                                      1785931200, 231101, 0x1e0ffff0, 8, 0);
+        genesis.hashFinalSaplingRoot = uint256S("0x3e49b5f954aa9d3545bc6c37744661eea48d7c34e3000d82b7f0010c30f4c2fb");
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000f3cceffcbacec9387eb6c768c6ae9966db7eb40c3461e8df93ed740178d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000001c2f0bad388f63e3b81b05dce775b458cb99841abd82e91bba56ac261b4"));
         assert(genesis.hashMerkleRoot == uint256S("0xb26beffd3e4735aa77e7ce94a9ff49902ad46b39a7e0f0ab50b13787a4381008"));
 
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -290,13 +294,14 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        // Blocks 1-600 stay PoW (block-1 premine + maturity window for nStakeMinDepth=600); PoS from 601.
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 601;
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 601;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 601; // must not precede UPGRADE_POS: AddToBlockIndex assumes vtx[1] is a coinstake once active
         consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_2].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
@@ -382,9 +387,10 @@ public:
         // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
         // re-grind before the public testnet launches.
         genesis = CreateGenesisBlock("KrovaCoin testnet genesis - TODO insert verifiable Aug 2026 headline before public launch",
-                                      1785931201, 372424, 0x1e0ffff0, 7, 0);
+                                      1785931201, 119161, 0x1e0ffff0, 8, 0);
+        genesis.hashFinalSaplingRoot = uint256S("0x3e49b5f954aa9d3545bc6c37744661eea48d7c34e3000d82b7f0010c30f4c2fb");
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000089ff707dcfdae394e0b4dd98f613b70ede62c91c4bf0c3bd3bc3e3db5a2"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000003524483005cf7a6b1946c5e0e8d3acdac545366757f45b56997f1a641e9"));
         assert(genesis.hashMerkleRoot == uint256S("0xb7f862c480f964409e6c3eb8e1b7b92e685b64cb9d734e0041642289d34954ba"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -443,13 +449,14 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        // Blocks 1-100 stay PoW (block-1 premine + maturity window for nStakeMinDepth=100); PoS from 101.
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 101;
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 101;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 101; // must not precede UPGRADE_POS: AddToBlockIndex assumes vtx[1] is a coinstake once active
         consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_2].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
@@ -527,9 +534,10 @@ public:
     {
         strNetworkID = "regtest";
 
-        genesis = CreateGenesisBlock("KrovaCoin regtest genesis", 1785931202, 0, 0x207fffff, 7, 0);
+        genesis = CreateGenesisBlock("KrovaCoin regtest genesis", 1785920000, 2, 0x207fffff, 8, 0);
+        genesis.hashFinalSaplingRoot = uint256S("0x3e49b5f954aa9d3545bc6c37744661eea48d7c34e3000d82b7f0010c30f4c2fb");
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x686cf7907e179683b7963f4bbce71307a6254ac83e2a7376b956a1ead4b9c87d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x266d0526e0cf1f45c2783092808755f26cabb7bca1aa90835810cb8cd4cf585c"));
         assert(genesis.hashMerkleRoot == uint256S("0xa2fe36fb9bd6393bc2ab6c66aa108388497abacb1f53bad6d16d7691e8a3a56f"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -593,14 +601,15 @@ public:
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
                 Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
-        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        // Blocks 1-101 stay PoW (block-1 premine + coinbase-maturity/stake-depth window); PoS from 102.
+        consensus.vUpgrades[Consensus::UPGRADE_POS].nActivationHeight           = 102; // coinbase maturity needs STRICTLY > nCoinbaseMaturity=100 confirmations, so +2 not +1
+        consensus.vUpgrades[Consensus::UPGRADE_POS_V2].nActivationHeight        = 102;
         consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight            = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_V2].nActivationHeight         = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight         =
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight     = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
-        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight          = 102; // must not precede UPGRADE_POS: AddToBlockIndex assumes vtx[1] is a coinstake once active
         consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight          =
                 Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
         consensus.vUpgrades[Consensus::UPGRADE_V5_0].nActivationHeight          = Consensus::NetworkUpgrade::ALWAYS_ACTIVE;

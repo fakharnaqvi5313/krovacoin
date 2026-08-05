@@ -173,6 +173,7 @@ BITCOIN_CORE_H = \
   compressor.h \
   consensus/consensus.h \
   consensus/merkle.h \
+  consensus/premine.h \
   consensus/validation.h \
   consensus/tx_verify.h \
   consensus/zerocoin_verify.h \
@@ -553,6 +554,7 @@ libbitcoin_common_a_SOURCES = \
   coins.cpp \
   compressor.cpp \
   consensus/merkle.cpp \
+  consensus/premine.cpp \
   key_io.cpp \
   primitives/block.cpp \
   primitives/transaction.cpp \
