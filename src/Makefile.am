@@ -33,7 +33,6 @@ LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
-LIBBITCOIN_ZEROCOIN=libzerocoin/libbitcoin_zerocoin.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBSAPLING=libsapling.a
@@ -98,7 +97,6 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_ZEROCOIN) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_WALLET) \
@@ -140,7 +138,6 @@ LIBSAPLING_H = \
 .PHONY: FORCE cargo-build check-symbols check-security
 # krovacoin core #
 BITCOIN_CORE_H = \
-  activemasternode.h \
   addrdb.h \
   addrman.h \
   attributes.h \
@@ -178,7 +175,6 @@ BITCOIN_CORE_H = \
   consensus/validation.h \
   consensus/vesting.h \
   consensus/tx_verify.h \
-  consensus/zerocoin_verify.h \
   consensus/params.h \
   consensus/upgrades.h \
   primitives/block.h \
@@ -188,28 +184,7 @@ BITCOIN_CORE_H = \
   crypter.h \
   ctpl_stl.h \
   cyclingvector.h \
-  evo/deterministicmns.h \
-  evo/evodb.h \
-  evo/mnauth.h \
-  evo/evonotificationinterface.h \
-  evo/providertx.h \
-  evo/specialtx_validation.h \
   flatdb.h \
-  llmq/quorums.h \
-  llmq/quorums_blockprocessor.h \
-  llmq/quorums_chainlocks.h \
-  llmq/quorums_commitment.h \
-  llmq/quorums_connections.h \
-  llmq/quorums_debug.h \
-  llmq/quorums_dkgsessionhandler.h \
-  llmq/quorums_dkgsessionmgr.h \
-  llmq/quorums_dkgsession.h \
-  llmq/quorums_init.h \
-  llmq/quorums_utils.h \
-  llmq/quorums_signing.h \
-  llmq/quorums_signing_shares.h \
-  tiertwo/masternode_meta_manager.h \
-  tiertwo/net_masternodes.h \
   addressbook.h \
   wallet/db.h \
   flatfile.h \
@@ -219,7 +194,6 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indirectmap.h \
   init.h \
-  tiertwo/init.h \
   interfaces/handler.h \
   interfaces/wallet.h \
   invalid.h \
@@ -232,22 +206,9 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
-  legacy/validation_zerocoin_legacy.h \
   sapling/sapling_validation.h \
-  budget/budgetdb.h \
-  budget/budgetmanager.h \
-  budget/budgetproposal.h \
-  budget/budgetvote.h \
-  budget/finalizedbudget.h \
-  budget/finalizedbudgetvote.h \
-  budget/budgetutil.h \
   mapport.h \
   memusage.h \
-  masternode.h \
-  masternode-payments.h \
-  masternode-sync.h \
-  masternodeman.h \
-  masternodeconfig.h \
   merkleblock.h \
   messagesigner.h \
   blockassembler.h \
@@ -306,8 +267,6 @@ BITCOIN_CORE_H = \
   threadinterrupt.h \
   timedata.h \
   tinyformat.h \
-  tiertwo/netfulfilledman.h \
-  tiertwo/tiertwo_sync_state.h \
   torcontrol.h \
   txdb.h \
   txmempool.h \
@@ -340,7 +299,6 @@ BITCOIN_CORE_H = \
   wallet/walletdb.h \
   wallet/walletutil.h \
   warnings.h \
-  zpiv/zpos.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
@@ -369,34 +327,10 @@ libbitcoin_server_a_SOURCES = \
   consensus/params.cpp \
   consensus/tx_verify.cpp \
   flatfile.cpp \
-  consensus/zerocoin_verify.cpp \
-  evo/deterministicmns.cpp \
-  evo/evodb.cpp \
-  evo/evonotificationinterface.cpp \
-  evo/mnauth.cpp \
-  evo/providertx.cpp \
-  evo/specialtx_validation.cpp \
-  llmq/quorums.cpp \
-  llmq/quorums_blockprocessor.cpp \
-  llmq/quorums_chainlocks.cpp \
-  llmq/quorums_commitment.cpp \
-  llmq/quorums_connections.cpp \
-  llmq/quorums_debug.cpp \
-  llmq/quorums_dkgsessionhandler.cpp \
-  llmq/quorums_dkgsessionmgr.cpp \
-  llmq/quorums_dkgsession.cpp \
-  llmq/quorums_init.cpp \
-  llmq/quorums_utils.cpp \
-  llmq/quorums_signing.cpp \
-  llmq/quorums_signing_shares.cpp \
-  tiertwo/masternode_meta_manager.cpp \
-  tiertwo/net_masternodes.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
-  tiertwo/init.cpp \
   dbwrapper.cpp \
-  legacy/validation_zerocoin_legacy.cpp \
   sapling/sapling_validation.cpp \
   merkleblock.cpp \
   blockassembler.cpp \
@@ -410,14 +344,10 @@ libbitcoin_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
-  rpc/masternode.cpp \
-  rpc/budget.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
-  rpc/rpcevo.cpp \
-  rpc/rpcquorums.cpp \
   rpc/server.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
@@ -465,7 +395,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   stakeinput.cpp \
-  zpiv/zpos.cpp \
   $(BITCOIN_CORE_H) \
   $(LIBSAPLING_H)
 
@@ -513,44 +442,12 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sph_skein.h \
   crypto/sph_types.h
 
-# libzerocoin library
-libzerocoin_libbitcoin_zerocoin_a_CPPFLAGS = $(AM_CPPFLAGS) $(BOOST_CPPFLAGS)
-libzerocoin_libbitcoin_zerocoin_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
-  libzerocoin/bignum.h \
-  libzerocoin/Coin.h \
-  libzerocoin/CoinRandomnessSchnorrSignature.h \
-  libzerocoin/CoinSpend.h \
-  libzerocoin/Commitment.h \
-  libzerocoin/Denominations.h \
-  libzerocoin/ParamGeneration.h \
-  libzerocoin/Params.h \
-  libzerocoin/SpendType.h \
-  libzerocoin/ZerocoinDefines.h \
-  zpiv/zpivmodule.h \
-  libzerocoin/bignum.cpp \
-  libzerocoin/Coin.cpp \
-  libzerocoin/CoinRandomnessSchnorrSignature.cpp \
-  libzerocoin/CoinSpend.cpp \
-  libzerocoin/Denominations.cpp \
-  libzerocoin/ParamGeneration.cpp \
-  libzerocoin/Params.cpp \
-  zpiv/zpivmodule.cpp
-
 # common: shared between krovad, and krova-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  activemasternode.cpp \
   base58.cpp \
   bip38.cpp \
-  budget/budgetdb.cpp \
-  budget/budgetmanager.cpp \
-  budget/budgetproposal.cpp \
-  budget/budgetvote.cpp \
-  budget/finalizedbudget.cpp \
-  budget/finalizedbudgetvote.cpp \
-  budget/budgetutil.cpp \
   chainparams.cpp \
   consensus/upgrades.cpp \
   coins.cpp \
@@ -568,11 +465,6 @@ libbitcoin_common_a_SOURCES = \
   invalid.cpp \
   key.cpp \
   keystore.cpp \
-  masternode.cpp \
-  masternode-payments.cpp \
-  masternode-sync.cpp \
-  masternodeconfig.cpp \
-  masternodeman.cpp \
   messagesigner.cpp \
   netaddress.cpp \
   netbase.cpp \
@@ -586,9 +478,6 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  tiertwo_networksync.cpp \
-  tiertwo/netfulfilledman.cpp \
-  tiertwo/tiertwo_sync_state.cpp \
   warnings.cpp \
   script/script_error.cpp \
   spork.cpp \
@@ -684,7 +573,6 @@ krovad_LDADD = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
-  $(LIBBITCOIN_ZEROCOIN) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CRYPTO) \
@@ -733,7 +621,6 @@ endif
 krova_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_ZEROCOIN) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1) \
@@ -779,30 +666,24 @@ endif
 CLEANFILES = $(EXTRA_LIBRARIES)
 
 CLEANFILES += *.gcda *.gcno
-CLEANFILES += budget/*.gcda budget/*.gcno
 CLEANFILES += bls/*.gcda bls/*.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
 CLEANFILES += crc32c/src/*.gcda crc32c/src/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
-CLEANFILES += evo/*.gcda evo/*.gcno
 CLEANFILES += interfaces/*.gcda interfaces/*.gcno
 CLEANFILES += legacy/*.gcda legacy/*.gcno
-CLEANFILES += libzerocoin/*.gcda libzerocoin/*.gcno
-CLEANFILES += llmq/*.gcda llmq/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
 CLEANFILES += rpc/*.gcda rpc/*.gcno
 CLEANFILES += sapling/*.gcda sapling/*.gcno
 CLEANFILES += script/*.gcda script/*.gcno
 CLEANFILES += support/*.gcda support/*.gcno
-CLEANFILES += tiertwo/*.gcda tiertwo/*.gcno
 CLEANFILES += univalue/*.gcda univalue/*.gcno
 CLEANFILES += util/*.gcda util/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
-CLEANFILES += zpiv/*.gcda zpiv/*.gcno
 CLEANFILES += obj/build.h
 
 CTAES_DIST =  crypto/ctaes/bench.c

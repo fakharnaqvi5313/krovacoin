@@ -22,7 +22,6 @@
 #include "optional.h"
 #include "primitives/transaction.h"
 #include "scheduler.h"
-#include "tiertwo/net_masternodes.h"
 #include "validation.h"
 
 #ifdef WIN32
@@ -692,14 +691,6 @@ void CNode::copyStats(CNodeStats& stats, const std::vector<bool>& m_asmap)
         X(nRecvBytes);
     }
     X(fWhitelisted);
-    X(m_masternode_connection);
-    X(m_masternode_iqr_connection);
-    X(m_masternode_probe_connection);
-    {
-        LOCK(cs_mnauth);
-        X(verifiedProRegTxHash);
-        X(verifiedPubKeyHash);
-    }
 
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
@@ -984,26 +975,6 @@ bool CConnman::AttemptToEvictConnection(bool fPreferNewConnection)
             if (node->fDisconnect)
                 continue;
 
-            // Protect verified MN-only connections
-            if (fMasterNode) {
-                // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
-                // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
-                // follow when the incoming connection is from another masternode. When a message other than MNAUTH
-                // is received after VERSION/VERACK, the protection is lifted immediately.
-                bool isProtected = GetSystemTimeInSeconds() - node->nTimeConnected < INBOUND_EVICTION_PROTECTION_TIME;
-                if (node->fFirstMessageReceived && !node->fFirstMessageIsMNAUTH) {
-                    isProtected = false;
-                }
-                // if MNAUTH was valid, the node is always protected (and at the same time not accounted when
-                // checking incoming connection limits)
-                if (!node->verifiedProRegTxHash.IsNull()) {
-                    isProtected = true;
-                }
-                if (isProtected) {
-                    continue;
-                }
-            }
-
             NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->nMinPingUsecTime, node->addr, node->nKeyedNetGroup};
             vEvictionCandidates.push_back(candidate);
         }
@@ -1078,7 +1049,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nVerifiedInboundMasternodes = 0;
 
     if (hSocket != INVALID_SOCKET)
         if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -1090,9 +1060,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         for (const CNode* pnode : vNodes) {
             if (pnode->fInbound) {
                 nInbound++;
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    nVerifiedInboundMasternodes++;
-                }
             }
         }
     }
@@ -1122,13 +1089,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
-    // TODO: pending review.
     // Evict connections until we are below nMaxInbound. In case eviction protection resulted in nodes to not be evicted
     // before, they might get evicted in batches now (after the protection timeout).
-    // We don't evict verified MN connections and also don't take them into account when checking limits. We can do this
-    // because we know that such connections are naturally limited by the total number of MNs, so this is not usable
-    // for attacks.
-    while (nInbound - nVerifiedInboundMasternodes >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS) {
+    while (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS) {
         if (!AttemptToEvictConnection(whitelisted)) {
             // No connection to evict, disconnect the new connection
             LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
@@ -1567,7 +1530,7 @@ void CConnman::ThreadDNSAddressSeed()
         LOCK(cs_vNodes);
         int nRelevant = 0;
         for (auto pnode : vNodes) {
-            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->fAddnode && !pnode->fInbound && !pnode->m_masternode_probe_connection;
+            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->fAddnode && !pnode->fInbound;
         }
         if (nRelevant >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
@@ -1714,7 +1677,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
-                if (!pnode->fInbound && !pnode->fAddnode && !pnode->m_masternode_connection) {
+                if (!pnode->fInbound && !pnode->fAddnode) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots. Inbound peers
@@ -1892,7 +1855,7 @@ void CConnman::ThreadOpenAddedConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool masternode_connection, bool masternode_probe_connection)
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* pszDest, bool fOneShot, bool fFeeler, bool fAddnode)
 {
     //
     // Initiate outbound network connection
@@ -1908,13 +1871,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else {
         CNode* pnode = FindNode(pszDest);
         if (pnode) {
-            // If this is a mnauth connection and the node is already connected normally,
-            // disconnect it and open a new connection
-            if (masternode_connection && !pnode->m_masternode_connection) {
-                pnode->fDisconnect = true;
-            } else {
-                return;
-            }
+            return;
         }
     }
 
@@ -1930,10 +1887,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fFeeler = true;
     if (fAddnode)
         pnode->fAddnode = true;
-    if (masternode_connection)
-        pnode->m_masternode_connection = true;
-    if (masternode_probe_connection)
-        pnode->m_masternode_probe_connection = true;
 
     m_msgproc->InitializeNode(pnode);
     {
@@ -1944,8 +1897,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::ThreadMessageHandler()
 {
-    int64_t nLastSendMessagesTimeMasternodes = 0;
-
     while (!flagInterruptMsgProc) {
         std::vector<CNode*> vNodesCopy;
         {
@@ -1958,13 +1909,6 @@ void CConnman::ThreadMessageHandler()
 
         bool fMoreWork = false;
 
-        // Don't send other messages to quorum nodes too often
-        bool fSkipSendMessagesForMasternodes = true;
-        if (GetTimeMillis() - nLastSendMessagesTimeMasternodes >= 100) {
-            fSkipSendMessagesForMasternodes = false;
-            nLastSendMessagesTimeMasternodes = GetTimeMillis();
-        }
-
         for (CNode* pnode : vNodesCopy) {
             if (pnode->fDisconnect)
                 continue;
@@ -1976,7 +1920,7 @@ void CConnman::ThreadMessageHandler()
                 return;
 
             // Send messages
-            if (!fSkipSendMessagesForMasternodes || !pnode->m_masternode_connection) {
+            {
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode, flagInterruptMsgProc);
             }
@@ -2135,8 +2079,6 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
 
     Options connOptions;
     Init(connOptions);
-    // init tier two connections manager
-    m_tiertwo_conn_man = std::make_unique<TierTwoConnMan>(this);
 }
 
 NodeId CConnman::GetNewNodeId()
@@ -2273,13 +2215,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Initiate outbound connections from -addnode
     threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
 
-    // Start tier two connection manager
-    if (m_tiertwo_conn_man) {
-        TierTwoConnMan::Options opts;
-        opts.m_has_specified_outgoing = !connOptions.m_specified_outgoing.empty();
-        m_tiertwo_conn_man->start(scheduler, opts);
-    }
-
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (clientInterface) {
             clientInterface->ThreadSafeMessageBox(
@@ -2334,7 +2269,6 @@ void CConnman::Interrupt()
     condMsgProc.notify_all();
 
     interruptNet();
-    if (m_tiertwo_conn_man) m_tiertwo_conn_man->interrupt();
     InterruptSocks5(true);
 
     if (semOutbound) {
@@ -2362,8 +2296,6 @@ void CConnman::Stop()
         threadDNSAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
-    // Stop tier two connection manager
-    if (m_tiertwo_conn_man) m_tiertwo_conn_man->stop();
 
     if (fAddressesInitialized)
     {
@@ -2522,8 +2454,6 @@ void CConnman::RelayInv(CInv& inv)
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes){
         if (!pnode->fSuccessfullyConnected) continue;
-        if ((pnode->nServices == NODE_BLOOM_WITHOUT_MN) && inv.IsMasterNodeType()) continue;
-        if (!pnode->CanRelay()) continue;
         if (pnode->nVersion >= ActiveProtocol())
             pnode->PushInventory(inv);
     }
@@ -2536,14 +2466,6 @@ void CConnman::RemoveAskFor(const uint256& invHash, int invType)
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
         pnode->AskForInvReceived(invHash);
-    }
-}
-
-void CConnman::UpdateQuorumRelayMemberIfNeeded(CNode* pnode)
-{
-    if (!pnode->m_masternode_iqr_connection && pnode->m_masternode_connection &&
-        m_tiertwo_conn_man->isMasternodeQuorumRelayMember(WITH_LOCK(pnode->cs_mnauth, return pnode->verifiedProRegTxHash))) {
-        pnode->m_masternode_iqr_connection = true;
     }
 }
 
@@ -2617,7 +2539,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     fWhitelisted = false;
     fOneShot = false;
     fAddnode = false;
-    m_masternode_connection = false;
     fClient = false; // set by version message
     fFeeler = false;
     fSuccessfullyConnected = false;
@@ -2779,17 +2700,6 @@ bool CConnman::IsNodeConnected(const CAddress& addr)
 CNode* CConnman::ConnectNode(const CAddress& addrConnect)
 {
     return ConnectNode(addrConnect, nullptr, true, true);
-}
-
-// valid, reachable and routable address (except for RegTest)
-bool validateMasternodeIP(const std::string& addrStr)
-{
-    CNetAddr resolved;
-    if (LookupHost(addrStr, resolved, false)) {
-        return ((IsReachable(resolved) && resolved.IsRoutable()) ||
-                (Params().IsRegTestNet() && resolved.IsValid()));
-    }
-    return false;
 }
 
 int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {

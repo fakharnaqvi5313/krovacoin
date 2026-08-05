@@ -5,7 +5,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include "budget/budgetmanager.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "clientversion.h"
@@ -14,8 +13,6 @@
 #include "hash.h"
 #include "kernel.h"
 #include "key_io.h"
-#include "llmq/quorums_chainlocks.h"
-#include "masternodeman.h"
 #include "policy/feerate.h"
 #include "policy/policy.h"
 #include "rpc/server.h"
@@ -136,7 +133,6 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
-    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
     return result;
 }
 
@@ -190,7 +186,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("stakeModifier", stakeModifier);
         result.pushKV("hashProofOfStake", hashProofOfStakeRet.GetHex());
     }
-    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
 
     return result;
 }
@@ -1248,9 +1243,6 @@ UniValue invalidateblock(const JSONRPCRequest& request)
 
     if (state.IsValid()) {
         ActivateBestChain(state);
-        int nHeight = WITH_LOCK(cs_main, return chainActive.Height(); );
-        g_budgetman.SetBestHeight(nHeight);
-        mnodeman.SetBestHeight(nHeight);
     }
 
     if (!state.IsValid()) {
@@ -1288,9 +1280,6 @@ UniValue reconsiderblock(const JSONRPCRequest& request)
 
     if (state.IsValid()) {
         ActivateBestChain(state);
-        int nHeight = WITH_LOCK(cs_main, return chainActive.Height(); );
-        g_budgetman.SetBestHeight(nHeight);
-        mnodeman.SetBestHeight(nHeight);
     }
 
     if (!state.IsValid()) {

@@ -18,7 +18,6 @@
 #include "tinyformat.h"
 #include "uint256.h"
 #include "util/system.h"
-#include "libzerocoin/Denominations.h"
 
 #include <vector>
 
@@ -257,7 +256,6 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 /** Used to marshal pointers into hashes for db storage. */
 
 // New serialization introduced with 4.0.99
-static const int DBI_OLD_SER_VERSION = 4009900;
 static const int DBI_SER_VERSION_NO_ZC = 4009902;   // removes mapZerocoinSupply, nMoneySupply
 
 class CDiskBlockIndex : public CBlockIndex
@@ -287,8 +285,11 @@ public:
         if (obj.nStatus & BLOCK_HAVE_DATA) READWRITE(VARINT(obj.nDataPos));
         if (obj.nStatus & BLOCK_HAVE_UNDO) READWRITE(VARINT(obj.nUndoPos));
 
+        // KrovaCoin is a fresh chain with no on-disk block index predating
+        // DBI_SER_VERSION_NO_ZC (which this node always writes), so the
+        // older zerocoin-era and pre-stake-modifier-V2 formats this
+        // upstream code originally read are unreachable and were removed.
         if (nSerVersion >= DBI_SER_VERSION_NO_ZC) {
-            // Serialization with CLIENT_VERSION = 4009902+
             READWRITE(obj.nFlags);
             READWRITE(obj.nVersion);
             READWRITE(obj.vStakeModifier);
@@ -304,60 +305,6 @@ public:
             if (obj.nVersion >= 8) {
                 READWRITE(obj.hashFinalSaplingRoot);
                 READWRITE(obj.nSaplingValue);
-            }
-        } else if (nSerVersion > DBI_OLD_SER_VERSION && ser_action.ForRead()) {
-            // Serialization with CLIENT_VERSION = 4009901
-            std::map<libzerocoin::CoinDenomination, int64_t> mapZerocoinSupply;
-            int64_t nMoneySupply = 0;
-            READWRITE(nMoneySupply);
-            READWRITE(obj.nFlags);
-            READWRITE(obj.nVersion);
-            READWRITE(obj.vStakeModifier);
-            READWRITE(obj.hashPrev);
-            READWRITE(obj.hashMerkleRoot);
-            READWRITE(obj.nTime);
-            READWRITE(obj.nBits);
-            READWRITE(obj.nNonce);
-            if (obj.nVersion > 3) {
-                READWRITE(mapZerocoinSupply);
-                if (obj.nVersion < 7) READWRITE(obj.nAccumulatorCheckpoint);
-            }
-        } else if (ser_action.ForRead()) {
-            // Serialization with CLIENT_VERSION = 4009900-
-            int64_t nMint = 0;
-            uint256 hashNext{};
-            int64_t nMoneySupply = 0;
-            READWRITE(nMint);
-            READWRITE(nMoneySupply);
-            READWRITE(obj.nFlags);
-            if (!Params().GetConsensus().NetworkUpgradeActive(obj.nHeight, Consensus::UPGRADE_V3_4)) {
-                uint64_t nStakeModifier = 0;
-                READWRITE(nStakeModifier);
-                SER_READ(obj, obj.SetStakeModifier(nStakeModifier, obj.GeneratedStakeModifier()));
-            } else {
-                uint256 nStakeModifierV2;
-                READWRITE(nStakeModifierV2);
-                SER_READ(obj, obj.SetStakeModifier(nStakeModifierV2));
-            }
-            if (obj.IsProofOfStake()) {
-                COutPoint prevoutStake;
-                unsigned int nStakeTime = 0;
-                READWRITE(prevoutStake);
-                READWRITE(nStakeTime);
-            }
-            READWRITE(obj.nVersion);
-            READWRITE(obj.hashPrev);
-            READWRITE(hashNext);
-            READWRITE(obj.hashMerkleRoot);
-            READWRITE(obj.nTime);
-            READWRITE(obj.nBits);
-            READWRITE(obj.nNonce);
-            if (obj.nVersion > 3) {
-                std::map<libzerocoin::CoinDenomination, int64_t> mapZerocoinSupply;
-                std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
-                READWRITE(obj.nAccumulatorCheckpoint);
-                READWRITE(mapZerocoinSupply);
-                READWRITE(vMintDenominationsInBlock);
             }
         }
     }

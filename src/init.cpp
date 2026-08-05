@@ -14,7 +14,6 @@
 
 #include "init.h"
 
-#include "activemasternode.h"
 #include "addrman.h"
 #include "amount.h"
 #include "bls/bls_wrapper.h"
@@ -40,7 +39,6 @@
 #include "shutdown.h"
 #include "spork.h"
 #include "sporkdb.h"
-#include "tiertwo/init.h"
 #include "txdb.h"
 #include "torcontrol.h"
 #include "guiinterface.h"
@@ -214,7 +212,6 @@ void Shutdown()
     StopREST();
     StopRPC();
     StopHTTPServer();
-    StopTierTwoThreads();
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(false);
@@ -241,7 +238,6 @@ void Shutdown()
     g_connman.reset();
     peerLogic.reset();
 
-    DumpTierTwo();
     if (::mempool.IsLoaded() && gArgs.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
     }
@@ -283,19 +279,13 @@ void Shutdown()
         pcoinscatcher.reset();
         pcoinsdbview.reset();
         pblocktree.reset();
-        zerocoinDB.reset();
-        accumulatorCache.reset();
         pSporkDB.reset();
-        DeleteTierTwo();
     }
 #ifdef ENABLE_WALLET
     for (CWalletRef pwallet : vpwallets) {
         pwallet->Flush(true);
     }
 #endif
-
-    // Tier two
-    ResetTierTwoInterfaces();
 
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
@@ -522,8 +512,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)");
     AppendParamsHelpMessages(strUsage, showDebug);
 
-    strUsage += GetTierTwoHelpString(showDebug);
-
     strUsage += HelpMessageGroup("Node relay options:");
     if (showDebug) {
         strUsage += HelpMessageOpt("-acceptnonstdtxn",
@@ -695,9 +683,6 @@ void ThreadImport(const std::vector<fs::path>& vImportFiles)
         LogPrintf("Failed to connect best block");
         StartShutdown();
     }
-
-    // tier two
-    InitTierTwoChainTip();
 
     if (gArgs.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool(::mempool);
@@ -1035,12 +1020,9 @@ bool AppInitParameterInteraction()
     // Check for -tor - as this is a privacy risk to continue, exit here
     if (gArgs.GetBoolArg("-tor", false))
         return UIError(strprintf(_("Error: Unsupported argument %s found, use %s."), "-tor", "-onion"));
-    // Check level must be 4 for zerocoin checks
+    // Check level must be 4
     if (gArgs.IsArgSet("-checklevel"))
         return UIError(strprintf(_("Error: Unsupported argument %s found. Checklevel must be level 4."), "-checklevel"));
-    // Exit early if -masternode=1 and -listen=0
-    if (gArgs.GetBoolArg("-masternode", DEFAULT_MASTERNODE) && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN))
-        return UIError(strprintf(_("Error: %s must be true if %s is set."), "-listen", "-masternode"));
     if (gArgs.GetBoolArg("-benchmark", false))
         UIWarning(strprintf(_("Warning: Unsupported argument %s ignored, use %s"), "-benchmark", "-debug=bench."));
 
@@ -1259,12 +1241,10 @@ bool AppInitMain()
         fs::path blocksDir = GetBlocksDir();
         fs::path chainstateDir = GetDataDir() / "chainstate";
         fs::path sporksDir = GetDataDir() / "sporks";
-        fs::path zerocoinDir = GetDataDir() / "zerocoin";
-        fs::path evoDir = GetDataDir() / "evodb";
 
-        LogPrintf("Deleting blockchain folders blocks, chainstate, sporks, zerocoin and evodb\n");
-        std::vector<fs::path> removeDirs{blocksDir, chainstateDir, sporksDir, zerocoinDir, evoDir};
-        // We delete in 5 individual steps in case one of the folder is missing already
+        LogPrintf("Deleting blockchain folders blocks, chainstate and sporks\n");
+        std::vector<fs::path> removeDirs{blocksDir, chainstateDir, sporksDir};
+        // We delete in individual steps in case one of the folder is missing already
         try {
             for (const auto& dir : removeDirs) {
                 if (fs::exists(dir)) {
@@ -1422,8 +1402,6 @@ bool AppInitMain()
     }
 #endif
 
-    InitTierTwoInterfaces();
-
     // ********************************************************* Step 7: load block chain
 
     fReindex = gArgs.GetBoolArg("-reindex", false);
@@ -1465,12 +1443,8 @@ bool AppInitMain()
                 pcoinscatcher.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
-                //KROVACOIN specific: zerocoin and spork DB's
-                zerocoinDB.reset(new CZerocoinDB(0, false, fReindex));
+                //KROVACOIN specific: spork DB
                 pSporkDB.reset(new CSporkDB(0, false, false));
-                accumulatorCache.reset(new AccumulatorCache(zerocoinDB.get()));
-
-                InitTierTwoPreChainLoad(fReindex);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1541,8 +1515,6 @@ bool AppInitMain()
                 // The on-disk coinsdb is now in a good state, create the cache
                 pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
 
-                InitTierTwoPostCoinsCacheLoad(&scheduler);
-
                 bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
                     // LoadChainTip sets chainActive based on pcoinsTip's best block
@@ -1554,26 +1526,10 @@ bool AppInitMain()
                 }
 
                 if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-                    // Prune zerocoin invalid outs if they were improperly stored in the coins database
-                    int chainHeight = chainActive.Height();
-                    bool fZerocoinActive = chainHeight > 0 && consensus.NetworkUpgradeActive(chainHeight, Consensus::UPGRADE_ZC);
-
                     uiInterface.InitMessage(_("Loading/Pruning invalid outputs..."));
-                    if (fZerocoinActive) {
-                        if (!pcoinsTip->PruneInvalidEntries()) {
-                            strLoadError = _("System error while flushing the chainstate after pruning invalid entries. Possible corrupt database.");
-                            break;
-                        }
-                        MoneySupply.Update(pcoinsTip->GetTotalAmount(), chainHeight);
-                        // No need to keep the invalid outs in memory. Clear the map 100 blocks after the last invalid UTXO
-                        if (chainHeight > consensus.height_last_invalid_UTXO + 100) {
-                            invalid_out::setInvalidOutPoints.clear();
-                        }
-                    } else {
-                        // Populate list of invalid/fraudulent outpoints that are banned from the chain
-                        // They will not be added to coins view
-                        invalid_out::LoadOutpoints();
-                    }
+                    // Populate list of invalid/fraudulent outpoints that are banned from the chain
+                    // They will not be added to coins view
+                    invalid_out::LoadOutpoints();
                 }
 
                 if (!is_coinsview_empty) {
@@ -1717,26 +1673,6 @@ bool AppInitMain()
     }
 
 
-    // ********************************************************* Step 10: setup layer 2 data
-
-    bool load_cache_files = !(fReindex || fReindexChainState);
-    {
-        LOCK(cs_main);
-        // was blocks/chainstate deleted?
-        if (chainActive.Tip() == nullptr) {
-            load_cache_files = false;
-        }
-    }
-
-    LoadTierTwo(chain_active_height, load_cache_files);
-    RegisterTierTwoValidationInterface();
-
-    // set the mode of budget voting for this node
-    SetBudgetFinMode(gArgs.GetArg("-budgetvotemode", "auto"));
-
-    // Start tier two threads and jobs
-    StartTierTwoThreadsAndScheduleJobs(threadGroup, scheduler);
-
     if (ShutdownRequested()) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
@@ -1842,9 +1778,6 @@ bool AppInitMain()
         threadGroup.create_thread(std::bind(&ThreadStakeMinter));
     }
 #endif
-
-    // Enable active MN
-    if (!InitActiveMN()) return false;
 
     // ********************************************************* Step 12: finished
 

@@ -19,7 +19,6 @@ bench_bench_krova_SOURCES = \
   bench/Examples.cpp \
   bench/base58.cpp \
   bench/bls.cpp \
-  bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/data.h \
@@ -32,8 +31,7 @@ bench_bench_krova_SOURCES = \
   bench/perf.h \
   bench/prevector.cpp \
   bench/rollingbloom.cpp \
-  bench/util_time.cpp \
-  bench/walletprocessblock.cpp
+  bench/util_time.cpp
 
 nodist_bench_bench_krova_SOURCES = $(GENERATED_BENCH_FILES)
 

@@ -37,12 +37,9 @@
 #include <utility>
 #include <vector>
 
-class AccumulatorCache;
 class CBlockIndex;
 class CBlockTreeDB;
-class CBudgetManager;
 class CCoinsViewDB;
-class CZerocoinDB;
 class CSporkDB;
 class CBloomFilter;
 class CInv;
@@ -71,7 +68,6 @@ static const bool DEFAULT_TXINDEX = true;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 /** The maximum size for transactions we're willing to relay/mine */
 static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
-static const unsigned int MAX_ZEROCOIN_TX_SIZE = 150000;
 /** Maximum kilobytes for transactions to store for processing during reorg */
 static const unsigned int MAX_DISCONNECTED_TX_POOL_SIZE = 20000;
 /** Default for -checkblocks */
@@ -205,7 +201,6 @@ bool GetTransaction(const uint256& hash, CTransactionRef& tx, uint256& hashBlock
 bool GetOutput(const uint256& hash, unsigned int index, CValidationState& state, CTxOut& out);
 
 double ConvertBitsToDouble(unsigned int nBits);
-int64_t GetMasternodePayment(int nHeight);
 
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState& state, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
@@ -370,12 +365,6 @@ extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
-
-/** Global variable that points to the zerocoin database (protected by cs_main) */
-extern std::unique_ptr<CZerocoinDB> zerocoinDB;
-
-/** In-memory cache for the zerocoin accumulators */
-extern std::unique_ptr<AccumulatorCache> accumulatorCache;
 
 /** Global variable that points to the spork database (protected by cs_main) */
 extern std::unique_ptr<CSporkDB> pSporkDB;

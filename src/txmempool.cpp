@@ -7,10 +7,6 @@
 #include "txmempool.h"
 
 #include "clientversion.h"
-#include "bls/bls_wrapper.h"
-#include "evo/deterministicmns.h"
-#include "evo/specialtx_validation.h"
-#include "evo/providertx.h"
 #include "policy/fees.h"
 #include "reverse_iterate.h"
 #include "streams.h"
@@ -360,58 +356,6 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-void CTxMemPool::addUncheckedSpecialTx(const CTransaction& tx)
-{
-    if (!tx.IsSpecialTx()) return;
-
-    // Invalid special txes never get this far because transactions should be
-    // fully checked by AcceptToMemoryPool() at this point, so we just assume that
-    // everything is fine here.
-    const uint256& txid = tx.GetHash();
-    switch(tx.nType) {
-        case CTransaction::TxType::PROREG: {
-            ProRegPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            if (!pl.collateralOutpoint.hash.IsNull()) {
-                mapProTxRefs.emplace(txid, pl.collateralOutpoint.hash);
-                mapProTxCollaterals.emplace(pl.collateralOutpoint, txid);
-            }
-            mapProTxAddresses.emplace(pl.addr, txid);
-            mapProTxPubKeyIDs.emplace(pl.keyIDOwner, txid);
-            mapProTxBlsPubKeyHashes.emplace(pl.pubKeyOperator.GetHash(), txid);
-            break;
-        }
-
-        case CTransaction::TxType::PROUPSERV: {
-            ProUpServPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            mapProTxRefs.emplace(pl.proTxHash, txid);
-            mapProTxAddresses.emplace(pl.addr, txid);
-            break;
-        }
-
-        case CTransaction::TxType::PROUPREG: {
-            ProUpRegPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            mapProTxRefs.emplace(pl.proTxHash, txid);
-            mapProTxBlsPubKeyHashes.emplace(pl.pubKeyOperator.GetHash(), txid);
-            break;
-        }
-
-        case CTransaction::TxType::PROUPREV: {
-            ProUpRevPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            mapProTxRefs.emplace(pl.proTxHash, txid);
-            break;
-        }
-
-    }
-}
-
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate)
 {
     // Add to memory pool without checking anything.
@@ -472,69 +416,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     totalTxSize += entry.GetTxSize();
     minerPolicyEstimator->processTransaction(entry, validFeeEstimate);
 
-    addUncheckedSpecialTx(tx);
-
     return true;
-}
-
-void CTxMemPool::removeUncheckedSpecialTx(const CTransaction& tx)
-{
-    if (!tx.IsSpecialTx()) return;
-
-    auto eraseProTxRef = [&](const uint256& proTxHash, const uint256& txHash) {
-        auto its = mapProTxRefs.equal_range(proTxHash);
-        for (auto it = its.first; it != its.second;) {
-            if (it->second == txHash) {
-                it = mapProTxRefs.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    };
-
-    const uint256& txid = tx.GetHash();
-    switch(tx.nType) {
-        case CTransaction::TxType::PROREG: {
-            ProRegPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            if (!pl.collateralOutpoint.IsNull()) {
-                eraseProTxRef(txid, pl.collateralOutpoint.hash);
-            }
-            mapProTxCollaterals.erase(pl.collateralOutpoint);
-            mapProTxAddresses.erase(pl.addr);
-            mapProTxPubKeyIDs.erase(pl.keyIDOwner);
-            mapProTxBlsPubKeyHashes.erase(pl.pubKeyOperator.GetHash());
-            break;
-        }
-
-        case CTransaction::TxType::PROUPSERV: {
-            ProUpServPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            eraseProTxRef(pl.proTxHash, txid);
-            mapProTxAddresses.erase(pl.addr);
-            break;
-        }
-
-        case CTransaction::TxType::PROUPREG: {
-            ProUpRegPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            eraseProTxRef(pl.proTxHash, txid);
-            mapProTxBlsPubKeyHashes.erase(pl.pubKeyOperator.GetHash());
-            break;
-        }
-
-        case CTransaction::TxType::PROUPREV: {
-            ProUpRevPL pl;
-            bool ok = GetTxPayload(tx, pl);
-            assert(ok);
-            eraseProTxRef(pl.proTxHash, txid);
-            break;
-        }
-
-    }
 }
 
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
@@ -557,8 +439,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
             mapSaplingNullifiers.erase(sd.nullifier);
         }
     }
-
-    removeUncheckedSpecialTx(tx);
 
     totalTxSize -= it->GetTxSize();
     cachedInnerUsage -= it->DynamicMemoryUsage();
@@ -715,129 +595,6 @@ void CTxMemPool::removeConflicts(const CTransaction& tx)
     }
 }
 
-void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction& tx, const CKeyID& keyId)
-{
-    if (mapProTxPubKeyIDs.count(keyId)) {
-        const uint256& conflictHash = mapProTxPubKeyIDs.at(keyId);
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-        }
-    }
-}
-
-void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction& tx, const CBLSPublicKey& pubKey)
-{
-    if (mapProTxBlsPubKeyHashes.count(pubKey.GetHash())) {
-        const uint256& conflictHash = mapProTxBlsPubKeyHashes.at(pubKey.GetHash());
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-        }
-    }
-}
-
-void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint)
-{
-    if (mapProTxCollaterals.count(collateralOutpoint)) {
-        const uint256& conflictHash = mapProTxCollaterals.at(collateralOutpoint);
-        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
-            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-        }
-    }
-}
-
-void CTxMemPool::removeProTxReferences(const uint256& proTxHash, MemPoolRemovalReason reason)
-{
-    // Remove TXs that refer to a certain MN
-    while (true) {
-        auto it = mapProTxRefs.find(proTxHash);
-        if (it == mapProTxRefs.end()) {
-            break;
-        }
-        auto conflictIt = mapTx.find(it->second);
-        if (conflictIt != mapTx.end()) {
-            removeRecursive(conflictIt->GetTx(), reason);
-        } else {
-            // Should not happen as we track referencing TXs in addUnchecked/removeUnchecked.
-            // But lets be on the safe side and not run into an endless loop...
-            LogPrint(BCLog::MEMPOOL, "%s: ERROR: found invalid TX ref in mapProTxRefs, proTxHash=%s, txHash=%s\n", __func__, proTxHash.ToString(), it->second.ToString());
-            mapProTxRefs.erase(it);
-        }
-    }
-}
-
-void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
-{
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    for (const auto& in : tx.vin) {
-        auto collateralIt = mapProTxCollaterals.find(in.prevout);
-        if (collateralIt != mapProTxCollaterals.end()) {
-            // These are not yet mined ProRegTxs
-            removeProTxReferences(collateralIt->second, MemPoolRemovalReason::CONFLICT);
-        }
-        auto dmn = mnList.GetMNByCollateral(in.prevout);
-        if (dmn) {
-            // These are updates referring to a mined ProRegTx
-            removeProTxReferences(dmn->proTxHash, MemPoolRemovalReason::CONFLICT);
-        }
-    }
-}
-
-void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
-{
-    removeProTxSpentCollateralConflicts(tx);
-
-    if (!tx.IsSpecialTx()) return;
-
-    const uint256& txid = tx.GetHash();
-    switch(tx.nType) {
-        case CTransaction::TxType::PROREG: {
-            ProRegPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return;
-            }
-            if (mapProTxAddresses.count(pl.addr)) {
-                const uint256& conflictHash = mapProTxAddresses.at(pl.addr);
-                if (conflictHash != txid && mapTx.count(conflictHash)) {
-                    removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-                }
-            }
-            removeProTxPubKeyConflicts(tx, pl.keyIDOwner);
-            removeProTxPubKeyConflicts(tx, pl.pubKeyOperator);
-            if (!pl.collateralOutpoint.hash.IsNull()) {
-                removeProTxCollateralConflicts(tx, pl.collateralOutpoint);
-            }
-            break;
-        }
-
-        case CTransaction::TxType::PROUPSERV: {
-            ProUpServPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return;
-            }
-            if (mapProTxAddresses.count(pl.addr)) {
-                const uint256& conflictHash = mapProTxAddresses.at(pl.addr);
-                if (conflictHash != txid && mapTx.count(conflictHash)) {
-                    removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
-                }
-            }
-            break;
-        }
-
-        case CTransaction::TxType::PROUPREG: {
-            ProUpRegPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return;
-            }
-            removeProTxPubKeyConflicts(tx, pl.pubKeyOperator);
-            break;
-        }
-
-    }
-}
-
 /**
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
@@ -861,7 +618,6 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
         }
         removeConflicts(*tx);
-        removeProTxConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
     lastRollingFeeUpdate = GetTime();
@@ -874,8 +630,6 @@ void CTxMemPool::_clear()
     mapLinks.clear();
     mapTx.clear();
     mapNextTx.clear();
-    mapProTxAddresses.clear();
-    mapProTxPubKeyIDs.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
     lastRollingFeeUpdate = GetTime();
@@ -1141,60 +895,6 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
     if (i == mapTx.end())
         return TxMempoolInfo();
     return GetInfo(i);
-}
-
-bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const
-{
-    if (!tx.IsSpecialTx()) return false;
-
-    LOCK(cs);
-
-    switch(tx.nType) {
-        case CTransaction::TxType::PROREG: {
-            ProRegPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return true; // i.e. can't decode payload == conflict
-            }
-            if (mapProTxAddresses.count(pl.addr) || mapProTxPubKeyIDs.count(pl.keyIDOwner) ||
-                    mapProTxBlsPubKeyHashes.count(pl.pubKeyOperator.GetHash())) {
-                return true;
-            }
-            if (!pl.collateralOutpoint.hash.IsNull()) {
-                if (mapProTxCollaterals.count(pl.collateralOutpoint)) {
-                    // there is another ProRegTx that refers to the same collateral
-                    return true;
-                }
-                if (mapNextTx.count(pl.collateralOutpoint)) {
-                    // there is another tx that spends the collateral
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        case CTransaction::TxType::PROUPSERV: {
-            ProUpServPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return true; // i.e. can't decode payload == conflict
-            }
-            auto it = mapProTxAddresses.find(pl.addr);
-            return it != mapProTxAddresses.end() && it->second != pl.proTxHash;
-        }
-
-        case CTransaction::TxType::PROUPREG: {
-            ProUpRegPL pl;
-            if (!GetTxPayload(tx, pl)) {
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-                return true; // i.e. can't decode payload == conflict
-            }
-            auto it = mapProTxBlsPubKeyHashes.find(pl.pubKeyOperator.GetHash());
-            return it != mapProTxBlsPubKeyHashes.end() && it->second != pl.proTxHash;
-        }
-
-    }
-    return false;
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const

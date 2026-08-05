@@ -6,6 +6,7 @@
 #define KROVACOIN_TEST_TEST_KROVA_H
 
 #include "fs.h"
+#include "random.h"
 #include "scheduler.h"
 #include "txdb.h"
 
@@ -66,12 +67,10 @@ private:
  */
 class CConnman;
 class PeerLogicValidation;
-class EvoNotificationInterface;
 struct TestingSetup: public BasicTestingSetup
 {
     boost::thread_group threadGroup;
     CConnman* connman;
-    EvoNotificationInterface* pEvoNotificationInterface;
     CScheduler scheduler;
     std::unique_ptr<PeerLogicValidation> peerLogic;
 

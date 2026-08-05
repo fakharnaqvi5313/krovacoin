@@ -852,13 +852,6 @@ public:
      */
     std::map<libzcash::SaplingPaymentAddress, std::vector<SaplingNoteEntry>> ListNotes() const;
 
-    /// Get 10000 KROV output and keys which can be used for the Masternode
-    bool GetMasternodeVinAndKeys(CPubKey& pubKeyRet,
-                                 CKey& keyRet,
-                                 const COutPoint& collateralOut,
-                                 bool fValidateCollateral,
-                                 std::string& strError);
-
     bool IsSaplingSpent(const SaplingOutPoint& op) const;
     bool IsSpent(const COutPoint& outpoint) const;
     bool IsSpent(const uint256& hash, unsigned int n) const;
@@ -903,14 +896,6 @@ public:
      * future: add capability to lock the mutex from outside of this class without exposing it.
      */
     void LockOutpointIfMineWithMutex(const CTransactionRef& ptx, const COutPoint& c);
-
-    /*
-     *  Requires cs_wallet lock.
-     *  Called from AddToWalletIfInvolvingMe. If ptx is a ProRegTx, and the
-     *  collateral (either referenced or created) is owned by this wallet,
-     *  lock the corresponding coin, to prevent accidental spending.
-     */
-    void LockIfMyCollateral(const CTransactionRef& ptx);
 
     //  keystore implementation
     CallResult<CTxDestination> getNewAddress(const std::string& addressLabel, const std::string purpose,
@@ -1137,8 +1122,6 @@ public:
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
-
-    bool CreateBudgetFeeTX(CTransactionRef& tx, const uint256& hash, CReserveKey& keyChange, CAmount fee);
 
     bool IsUsed(const CTxDestination address) const;
 

@@ -6,10 +6,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core_io.h"
-#include "evo/providertx.h"
 #include "key_io.h"
 #include "keystore.h"
-#include "llmq/quorums_chainlocks.h"
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
@@ -32,42 +30,6 @@
 #include <stdint.h>
 
 #include <univalue.h>
-
-template <typename Payload>
-static void PayloadToJSON(const CTransaction& tx, Payload& pl, UniValue& entry)
-{
-    if (GetTxPayload(tx, pl)) {
-        UniValue payloadObj;
-        pl.ToJson(payloadObj);
-        entry.pushKV("payload", payloadObj);
-    }
-}
-
-static void PayloadToJSON(const CTransaction& tx, UniValue& entry)
-{
-    switch(tx.nType) {
-        case CTransaction::TxType::PROREG: {
-            ProRegPL pl;
-            PayloadToJSON(tx, pl, entry);
-            break;
-        }
-        case CTransaction::TxType::PROUPSERV: {
-            ProUpServPL pl;
-            PayloadToJSON(tx, pl, entry);
-            break;
-        }
-        case CTransaction::TxType::PROUPREG: {
-            ProUpRegPL pl;
-            PayloadToJSON(tx, pl, entry);
-            break;
-        }
-        case CTransaction::TxType::PROUPREV: {
-            ProUpRevPL pl;
-            PayloadToJSON(tx, pl, entry);
-            break;
-        }
-    }
-}
 
 extern int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* blockindex, const CBlockIndex*& next);
 
@@ -101,12 +63,6 @@ void TxToJSON(CWallet* const pwallet, const CTransaction& tx, const CBlockIndex*
         }
     }
 
-    // Special txes
-    if (tx.IsSpecialTx()) {
-        PayloadToJSON(tx, entry);
-    }
-
-    bool chainLock = false;
     if (blockindex && tip) {
         entry.pushKV("blockhash", blockindex->GetBlockHash().ToString());
         int confirmations = ComputeConfirmations(tip, blockindex);
@@ -114,12 +70,10 @@ void TxToJSON(CWallet* const pwallet, const CTransaction& tx, const CBlockIndex*
             entry.pushKV("confirmations", confirmations);
             entry.pushKV("time", blockindex->GetBlockTime());
             entry.pushKV("blocktime", blockindex->GetBlockTime());
-            chainLock = llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash());
         } else {
             entry.pushKV("confirmations", 0);
         }
     }
-    entry.pushKV("chainlock", chainLock);
 }
 
 std::string GetSaplingTxHelpInfo()

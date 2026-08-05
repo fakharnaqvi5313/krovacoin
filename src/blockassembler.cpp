@@ -14,8 +14,6 @@
 #include "consensus/merkle.h"
 #include "consensus/upgrades.h"
 #include "consensus/validation.h"
-#include "llmq/quorums_blockprocessor.h"
-#include "masternode-payments.h"
 #include "consensus/premine.h"
 #include "policy/policy.h"
 #include "pow.h"
@@ -92,9 +90,7 @@ bool SolveProofOfStake(CBlock* pblock, CBlockIndex* pindexPrev, CWallet* pwallet
     }
     // Stake found
 
-    // Create coinbase tx and add masternode/budget payments
     CMutableTransaction txCoinbase = NewCoinbase(pindexPrev->nHeight + 1);
-    FillBlockPayee(txCoinbase, txCoinStake, pindexPrev, true);
 
     // Sign coinstake
     if (!pwallet->SignCoinStake(txCoinStake)) {
@@ -126,15 +122,7 @@ CMutableTransaction CreateCoinbaseTx(const CScript& scriptPubKeyIn, CBlockIndex*
 
     // Create coinbase tx
     CMutableTransaction txCoinbase = NewCoinbase(nHeight, &scriptPubKeyIn);
-
-    //Masternode and general budget payments
-    CMutableTransaction txDummy;    // POW blocks have no coinstake
-    FillBlockPayee(txCoinbase, txDummy, pindexPrev, false);
-
-    // If no payee was detected, then the whole block value goes to the first output.
-    if (txCoinbase.vout.size() == 1) {
-        txCoinbase.vout[0].nValue = GetBlockValue(nHeight);
-    }
+    txCoinbase.vout[0].nValue = GetBlockValue(nHeight);
 
     return txCoinbase;
 }
@@ -204,22 +192,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         return nullptr;
     }
 
-    // After v6 enforcement, add LLMQ commitments if needed
-    const Consensus::Params& consensus = Params().GetConsensus();
-    if (consensus.NetworkUpgradeActive(nHeight, Consensus::UPGRADE_V6_0) && fIncludeQfc) {
-        LOCK(cs_main);
-        for (const auto& p : Params().GetConsensus().llmqs) {
-            CTransactionRef qcTx;
-            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
-                pblock->vtx.emplace_back(qcTx);
-                pblocktemplate->vTxFees.emplace_back(0);
-                pblocktemplate->vTxSigOps.emplace_back(0);
-                nBlockSize += qcTx->GetTotalSize();
-                ++nBlockTx;
-            }
-        }
-    }
-
     if (!fNoMempoolTx) {
         // Add transactions from mempool
         LOCK2(cs_main,mempool.cs);
@@ -241,7 +213,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Fill in header
     pblock->hashPrevBlock = pindexPrev->GetBlockHash();
-    if (!fProofOfStake) UpdateTime(pblock, consensus, pindexPrev);
+    if (!fProofOfStake) UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
     pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
     pblock->nNonce = 0;
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*(pblock->vtx[0]));
