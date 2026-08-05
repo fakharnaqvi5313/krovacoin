@@ -665,15 +665,15 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # krovad binary #
-krovacoind_SOURCES = krovad.cpp
-krovacoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-krovacoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-krovacoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+krovad_SOURCES = krovad.cpp
+krovad_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+krovad_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+krovad_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-krovacoind_SOURCES += krovad-res.rc
+krovad_SOURCES += krovad-res.rc
 endif
-krovacoind_LDADD = \
+krovad_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -690,19 +690,19 @@ krovacoind_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-krovacoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+krovad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
 # krova-cli binary #
-krovacoin_cli_SOURCES = krova-cli.cpp
-krovacoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-krovacoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-krovacoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+krova_cli_SOURCES = krova-cli.cpp
+krova_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+krova_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+krova_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-krovacoin_cli_SOURCES += krova-cli-res.rc
+krova_cli_SOURCES += krova-cli-res.rc
 endif
 
-krovacoin_cli_LDADD = \
+krova_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -711,20 +711,20 @@ krovacoin_cli_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-krovacoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+krova_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
 # krova-tx binary #
-krovacoin_tx_SOURCES = krova-tx.cpp
-krovacoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-krovacoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-krovacoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+krova_tx_SOURCES = krova-tx.cpp
+krova_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+krova_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+krova_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-krovacoin_tx_SOURCES += krova-tx-res.rc
+krova_tx_SOURCES += krova-tx-res.rc
 endif
 
-krovacoin_tx_LDADD = \
+krova_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_ZEROCOIN) \
@@ -735,7 +735,7 @@ krovacoin_tx_LDADD = \
   $(LIBRUSTZCASH) \
   $(LIBZCASH_LIBS)
 
-krovacoin_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
+krova_tx_LDADD += $(BOOST_LIBS) $(BLS_LIBS)
 #
 
 # bitcoinconsensus library #
