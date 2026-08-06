@@ -344,14 +344,21 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
+// Disconnecting a boost::signals2 slot by comparing raw function pointers
+// (the plain .connect()/.disconnect(fn) pattern) trips an invalid static_cast
+// inside boost::function on newer GCC (13+) -- store the connection object
+// instead and disconnect through it directly, which sidesteps the comparison
+// entirely.
+static boost::signals2::connection g_rpcNotifyBlockChangeConnection;
+
 void OnRPCStarted()
 {
-    uiInterface.NotifyBlockTip.connect(RPCNotifyBlockChange);
+    g_rpcNotifyBlockChangeConnection = uiInterface.NotifyBlockTip.connect(RPCNotifyBlockChange);
 }
 
 void OnRPCStopped()
 {
-    uiInterface.NotifyBlockTip.disconnect(RPCNotifyBlockChange);
+    g_rpcNotifyBlockChangeConnection.disconnect();
     //RPCNotifyBlockChange(0);
     g_best_block_cv.notify_all();
     LogPrint(BCLog::RPC, "RPC stopped.\n");
@@ -1613,8 +1620,11 @@ bool AppInitMain()
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
+    // Disconnected via the connection object below, not by function-pointer
+    // comparison -- see g_rpcNotifyBlockChangeConnection's comment above.
+    boost::signals2::connection genesisWaitConnection;
     if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
+        genesisWaitConnection = uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
     } else {
         fHaveGenesis = true;
     }
@@ -1649,7 +1659,7 @@ bool AppInitMain()
         while (!fHaveGenesis && !ShutdownRequested()) {
             condvar_GenesisWait.wait_for(lockG, std::chrono::milliseconds(500));
         }
-        uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
+        genesisWaitConnection.disconnect();
     }
 
     if (ShutdownRequested()) {

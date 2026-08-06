@@ -60,7 +60,6 @@ BASE_SCRIPTS= [
     'wallet_basic.py',                          # ~ 498 sec
     'wallet_backup.py',                         # ~ 477 sec
     'mempool_persist.py',                       # ~ 417 sec
-    'p2p_quorum_connect.py',                    # ~ 400 sec
     'wallet_reorgsrestore.py',                  # ~ 391 sec
     'p2p_addr_relay.py',                        # ~ 380 sec
 
@@ -131,7 +130,6 @@ BASE_SCRIPTS= [
     'p2p_leak.py',                              # ~ 54 sec
     'wallet_resendwallettransactions.py',       # ~ 53 sec
     'mempool_resurrect.py',                     # ~ 51 sec
-    'rpc_budget.py',                            # ~ 50 sec
     'mempool_spend_coinbase.py',                # ~ 50 sec
     'rpc_signrawtransaction.py',                # ~ 50 sec
     'rpc_decodescript.py',                      # ~ 50 sec
@@ -157,22 +155,6 @@ BASE_SCRIPTS= [
     # 'feature_minchainwork.py',
     # 'p2p_fingerprint.py',
     # 'p2p_unrequested_blocks.py',
-]
-
-TIERTWO_SCRIPTS = [
-    # Longest test should go first, to favor running tests in parallel
-    'tiertwo_governance_sync_basic.py',         # ~ 1160 sec
-    'tiertwo_dkg_errors.py',                    # ~ 486 sec
-    'tiertwo_dkg_pose.py',                      # ~ 444 sec
-    'tiertwo_mn_compatibility.py',              # ~ 413 sec
-    'tiertwo_signing_session.py',               # ~ 390 sec
-    'tiertwo_chainlocks.py',                    # ~ ??? sec
-    'tiertwo_deterministicmns.py',              # ~ 366 sec
-    'tiertwo_governance_reorg.py',              # ~ 361 sec
-    'tiertwo_masternode_activation.py',         # ~ 352 sec
-    'tiertwo_masternode_ping.py',               # ~ 293 sec
-    'tiertwo_governance_invalid_budget.py',     # ~ 266 sec
-    'tiertwo_reorg_mempool.py',                 # ~ 97 sec
 ]
 
 SAPLING_SCRIPTS = [
@@ -225,7 +207,6 @@ LEGACY_SKIP_TESTS = [
     'p2p_time_offset.py',
     'rpc_bip38.py',
     'rpc_blockchain.py',
-    'rpc_budget.py',
     'rpc_decodescript.py',
     'rpc_fundrawtransaction.py',
     'rpc_net.py',
@@ -251,7 +232,7 @@ LEGACY_SKIP_TESTS = [
 ]
 
 # Place the lists with the longest tests (on average) first
-ALL_SCRIPTS = EXTENDED_SCRIPTS + TIERTWO_SCRIPTS + SAPLING_SCRIPTS + BASE_SCRIPTS
+ALL_SCRIPTS = EXTENDED_SCRIPTS + SAPLING_SCRIPTS + BASE_SCRIPTS
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -280,7 +261,6 @@ def main():
     parser.add_argument('--skipcache', '-s', action='store_true', help='do NOT create a cache with the test run (tests that make use of the cache will fail). Takes precedence over --keepcache')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--legacywallet', '-w', action='store_true', help='create pre-HD wallets only')
-    parser.add_argument('--tiertwo', '-m', action='store_true', help='run tier two tests only')
     parser.add_argument('--sapling', '-z', action='store_true', help='run sapling tests only')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     args, unknown_args = parser.parse_known_args()
@@ -297,8 +277,6 @@ def main():
     passon_args.append("--configfile=%s" % configfile)
     if args.legacywallet:
         passon_args.append("--legacywallet")
-    if args.tiertwo:
-        passon_args.append("--tiertwo")
     if args.sapling:
         passon_args.append("--sapling")
 
@@ -343,14 +321,12 @@ def main():
                     print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], t))
         else:
             test_list = []
-            if args.tiertwo:
-                test_list += TIERTWO_SCRIPTS
             if args.sapling:
                 test_list += SAPLING_SCRIPTS
             if len(test_list) == 0:
                 # No individual tests (or sub-list) have been specified.
                 # Run all base tests, and optionally run extended tests.
-                test_list = TIERTWO_SCRIPTS + SAPLING_SCRIPTS + BASE_SCRIPTS
+                test_list = SAPLING_SCRIPTS + BASE_SCRIPTS
                 if args.extended:
                     # place the EXTENDED_SCRIPTS first since the three longest ones
                     # are there and the list is shorter

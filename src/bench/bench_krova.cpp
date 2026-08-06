@@ -24,7 +24,6 @@ static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
 void InitBLSTests();
 void CleanupBLSTests();
-void CleanupBLSDkgTests();
 
 int main(int argc, char** argv)
 {
@@ -77,7 +76,6 @@ int main(int argc, char** argv)
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
     // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
-    CleanupBLSDkgTests();
     CleanupBLSTests();
 
     ECC_Stop();
