@@ -12,6 +12,7 @@
 #include "primitives/block.h"
 #include "script/sign.h"
 #include "test/util/blocksutil.h"
+#include "utiltime.h"
 #include "wallet/wallet.h"
 
 #include <boost/test/unit_test.hpp>
@@ -159,15 +160,24 @@ std::shared_ptr<CBlock> CreateBlockInternal(CWallet* pwalletMain, const std::vec
         }
     }
 
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(
-            Params(), false).CreateNewBlock(CScript(),
-                                            pwalletMain,
-                                            true,
-                                            &availableCoins,
-                                            true,
-                                            false,
-                                            customPrevBlock,
-                                            false);
+    // The kernel hash check is probabilistic (weighted stake value against a
+    // target that's re-derived every block), so a single attempt at a single
+    // timestamp isn't guaranteed to find a valid kernel -- see
+    // TestPoSChainSetup's own mining loop for the same issue. Retry with the
+    // mocked clock nudged forward instead of asserting on the first miss.
+    std::unique_ptr<CBlockTemplate> pblocktemplate;
+    for (int attempt = 0; attempt < 100000 && !pblocktemplate; attempt++) {
+        SetMockTime(GetAdjustedTime() + 1);
+        pblocktemplate = BlockAssembler(
+                Params(), false).CreateNewBlock(CScript(),
+                                                pwalletMain,
+                                                true,
+                                                &availableCoins,
+                                                true,
+                                                false,
+                                                customPrevBlock,
+                                                false);
+    }
     BOOST_ASSERT(pblocktemplate);
     auto pblock = std::make_shared<CBlock>(pblocktemplate->block);
     if (!txns.empty()) {

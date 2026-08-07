@@ -43,6 +43,12 @@ void CChainParams::UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, i
     consensus.vUpgrades[idx].nActivationHeight = nActivationHeight;
 }
 
+void CChainParams::UpdateBudgetCycleBlocks(int nCycleBlocks)
+{
+    assert(IsRegTestNet()); // only available for regtest
+    consensus.nBudgetCycleBlocks = nCycleBlocks;
+}
+
 /**
  * Build the genesis block. Note that the output of the genesis coinbase cannot
  * be spent as it did not originally exist in the database -- the real 72B KrovaCoin
@@ -523,4 +529,9 @@ void SelectParams(const std::string& network)
 void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight)
 {
     globalChainParams->UpdateNetworkUpgradeParameters(idx, nActivationHeight);
+}
+
+void UpdateBudgetCycleBlocks(int nCycleBlocks)
+{
+    globalChainParams->UpdateBudgetCycleBlocks(nCycleBlocks);
 }

@@ -102,6 +102,7 @@ public:
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
 
     void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight);
+    void UpdateBudgetCycleBlocks(int nCycleBlocks);
 protected:
     CChainParams() {}
 
@@ -144,5 +145,10 @@ void SelectParams(const std::string& chain);
  * Allows modifying the network upgrade regtest parameters.
  */
 void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight);
+
+/**
+ * Allows modifying the Staking Rewards Pool superblock cycle length (regtest only).
+ */
+void UpdateBudgetCycleBlocks(int nCycleBlocks);
 
 #endif // BITCOIN_CHAINPARAMS_H
