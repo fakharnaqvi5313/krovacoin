@@ -101,41 +101,32 @@ BOOST_AUTO_TEST_CASE(block_signature_test)
     }
 }
 
-CAmount nMoneySupplyPoWEnd = 43199500 * COIN;
-
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
+    // Zero protocol inflation (see GetBlockValue() in validation.cpp): the entire
+    // 72B supply is minted exactly once, in the block-1 premine. Every other
+    // height -- including genesis and the PoW bootstrap window before PoS
+    // activation -- mints nothing. This replaces the old PIVX declining-subsidy
+    // curve this test used to check, which no longer describes this chain at all.
+    const CAmount nExpectedPremine = Params().GetConsensus().nMaxMoneyOut;
+    BOOST_CHECK(GetBlockValue(1) == nExpectedPremine);
+    BOOST_CHECK(Params().GetConsensus().MoneyRange(GetBlockValue(1)));
+
+    BOOST_CHECK(GetBlockValue(0) == 0);
+    for (int nHeight = 2; nHeight < 300000; nHeight += 997) {
+        BOOST_CHECK(GetBlockValue(nHeight) == 0);
+    }
+
+    // Total ever minted, summed over a full 20-year-plus span of blocks at the
+    // 60s target block time (a little over 10.5M blocks), must equal exactly
+    // the premine and never exceed nMaxMoneyOut -- the same invariant
+    // AssertPremineTotal()-style consensus checks enforce at chain-init time.
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 1; nHeight += 1) {
-        /* premine in block 1 (60,001 KROV) */
-        CAmount nSubsidy = GetBlockValue(nHeight + 1);
-        BOOST_CHECK(nSubsidy <= 60001 * COIN);
-        nSum += nSubsidy;
+    for (int nHeight = 0; nHeight <= 10512000; nHeight += 1) {
+        nSum += GetBlockValue(nHeight);
+        BOOST_CHECK(nSum <= nExpectedPremine);
     }
-
-    for (int nHeight = 1; nHeight < 86400; nHeight += 1) {
-        /* PoW Phase One */
-        CAmount nSubsidy = GetBlockValue(nHeight + 1);
-        BOOST_CHECK(nSubsidy <= 250 * COIN);
-        nSum += nSubsidy;
-    }
-
-    for (int nHeight = 86400; nHeight < 151200; nHeight += 1) {
-        /* PoW Phase Two */
-        CAmount nSubsidy = GetBlockValue(nHeight + 1);
-        BOOST_CHECK(nSubsidy <= 225 * COIN);
-        nSum += nSubsidy;
-    }
-
-    for (int nHeight = 151200; nHeight < 259200; nHeight += 1) {
-        /* PoW Phase Two */
-        CAmount nSubsidy = GetBlockValue(nHeight + 1);
-        BOOST_CHECK(nSubsidy <= 45 * COIN);
-        BOOST_CHECK(Params().GetConsensus().MoneyRange(nSubsidy));
-        nSum += nSubsidy;
-        BOOST_CHECK(nSum > 0 && nSum <= nMoneySupplyPoWEnd);
-    }
-    BOOST_CHECK(nSum == 4109975100000000ULL);
+    BOOST_CHECK(nSum == nExpectedPremine);
 }
 
 bool ReturnFalse() { return false; }
