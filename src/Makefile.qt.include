@@ -28,11 +28,8 @@ QT_FORMS_UI = \
   qt/krovacoin/forms/dashboardwidget.ui \
   qt/krovacoin/forms/addresslabelrow.ui \
   qt/krovacoin/forms/contactdropdownrow.ui \
-  qt/krovacoin/forms/mninfodialog.ui \
   qt/krovacoin/forms/optionbutton.ui \
-  qt/krovacoin/forms/masternodewizarddialog.ui \
   qt/krovacoin/forms/mnrow.ui \
-  qt/krovacoin/forms/masternodeswidget.ui \
   qt/krovacoin/forms/myaddressrow.ui \
   qt/krovacoin/forms/csrow.ui \
   qt/krovacoin/forms/sendmemodialog.ui \
@@ -48,12 +45,6 @@ QT_FORMS_UI = \
   qt/krovacoin/forms/addresseswidget.ui \
   qt/krovacoin/forms/defaultdialog.ui \
   qt/krovacoin/forms/coldstakingwidget.ui \
-  qt/krovacoin/forms/proposalcard.ui \
-  qt/krovacoin/forms/mnselectiondialog.ui \
-  qt/krovacoin/forms/votedialog.ui \
-  qt/krovacoin/forms/createproposaldialog.ui \
-  qt/krovacoin/forms/proposalinfodialog.ui \
-  qt/krovacoin/forms/governancewidget.ui \
   qt/krovacoin/settings/forms/settingsbackupwallet.ui \
   qt/krovacoin/settings/forms/settingsexportcsv.ui \
   qt/krovacoin/settings/forms/settingsbittoolwidget.ui \
@@ -114,13 +105,9 @@ QT_MOC_CPP = \
   qt/krovacoin/moc_dashboardwidget.cpp \
   qt/krovacoin/moc_addresslabelrow.cpp \
   qt/krovacoin/moc_contactdropdownrow.cpp \
-  qt/krovacoin/moc_mninfodialog.cpp \
   qt/krovacoin/moc_optionbutton.cpp \
   qt/krovacoin/moc_coldstakingmodel.cpp \
-  qt/krovacoin/moc_mnmodel.cpp \
-  qt/krovacoin/moc_masternodewizarddialog.cpp \
   qt/krovacoin/moc_mnrow.cpp \
-  qt/krovacoin/moc_masternodeswidget.cpp \
   qt/krovacoin/moc_myaddressrow.cpp \
   qt/krovacoin/moc_csrow.cpp \
   qt/krovacoin/moc_contactsdropdown.cpp \
@@ -137,12 +124,6 @@ QT_MOC_CPP = \
   qt/krovacoin/moc_addresseswidget.cpp \
   qt/krovacoin/moc_defaultdialog.cpp \
   qt/krovacoin/moc_coldstakingwidget.cpp \
-  qt/krovacoin/moc_proposalcard.cpp \
-  qt/krovacoin/moc_mnselectiondialog.cpp \
-  qt/krovacoin/moc_votedialog.cpp \
-  qt/krovacoin/moc_createproposaldialog.cpp \
-  qt/krovacoin/moc_proposalinfodialog.cpp \
-  qt/krovacoin/moc_governancewidget.cpp \
   qt/krovacoin/settings/moc_settingsbackupwallet.cpp \
   qt/krovacoin/settings/moc_settingsexportcsv.cpp \
   qt/krovacoin/settings/moc_settingsbittoolwidget.cpp \
@@ -229,13 +210,9 @@ BITCOIN_QT_H = \
   qt/krovacoin/dashboardwidget.h \
   qt/krovacoin/addresslabelrow.h \
   qt/krovacoin/contactdropdownrow.h \
-  qt/krovacoin/mninfodialog.h \
   qt/krovacoin/optionbutton.h \
   qt/krovacoin/coldstakingmodel.h \
-  qt/krovacoin/mnmodel.h \
-  qt/krovacoin/masternodewizarddialog.h \
   qt/krovacoin/mnrow.h \
-  qt/krovacoin/masternodeswidget.h \
   qt/krovacoin/myaddressrow.h \
   qt/krovacoin/csrow.h \
   qt/krovacoin/contactsdropdown.h \
@@ -252,13 +229,6 @@ BITCOIN_QT_H = \
   qt/krovacoin/addresseswidget.h \
   qt/krovacoin/defaultdialog.h \
   qt/krovacoin/coldstakingwidget.h \
-  qt/krovacoin/governancemodel.h \
-  qt/krovacoin/proposalcard.h \
-  qt/krovacoin/mnselectiondialog.h \
-  qt/krovacoin/votedialog.h \
-  qt/krovacoin/createproposaldialog.h \
-  qt/krovacoin/proposalinfodialog.h \
-  qt/krovacoin/governancewidget.h \
   qt/krovacoin/settings/settingsbackupwallet.h \
   qt/krovacoin/settings/settingsexportcsv.h \
   qt/krovacoin/settings/settingsbittoolwidget.h \
@@ -570,12 +540,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/krovacoin/contactdropdownrow.cpp \
   qt/krovacoin/contactsdropdown.cpp \
   qt/krovacoin/optionbutton.cpp \
-  qt/krovacoin/mninfodialog.cpp \
   qt/krovacoin/coldstakingmodel.cpp \
-  qt/krovacoin/mnmodel.cpp \
-  qt/krovacoin/masternodewizarddialog.cpp \
   qt/krovacoin/mnrow.cpp \
-  qt/krovacoin/masternodeswidget.cpp \
   qt/krovacoin/myaddressrow.cpp \
   qt/krovacoin/csrow.cpp \
   qt/krovacoin/sendchangeaddressdialog.cpp \
@@ -591,13 +557,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/krovacoin/addresseswidget.cpp \
   qt/krovacoin/defaultdialog.cpp \
   qt/krovacoin/coldstakingwidget.cpp \
-  qt/krovacoin/governancemodel.cpp \
-  qt/krovacoin/proposalcard.cpp \
-  qt/krovacoin/mnselectiondialog.cpp \
-  qt/krovacoin/votedialog.cpp \
-  qt/krovacoin/createproposaldialog.cpp \
-  qt/krovacoin/proposalinfodialog.cpp \
-  qt/krovacoin/governancewidget.cpp \
   qt/krovacoin/settings/settingsbackupwallet.cpp \
   qt/krovacoin/settings/settingsexportcsv.cpp \
   qt/krovacoin/settings/settingsbittoolwidget.cpp \

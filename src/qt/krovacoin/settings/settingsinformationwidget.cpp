@@ -123,8 +123,6 @@ void SettingsInformationWidget::loadClientModel()
 
         setNumBlocks(clientModel->getNumBlocks());
         connect(clientModel, &ClientModel::numBlocksChanged, this, &SettingsInformationWidget::setNumBlocks);
-
-        connect(clientModel, &ClientModel::strMasternodesChanged, this, &SettingsInformationWidget::setMasternodeCount);
     }
 }
 
@@ -168,11 +166,6 @@ void SettingsInformationWidget::setNumBlocks(int count)
     }
 }
 
-void SettingsInformationWidget::setMasternodeCount(const QString& strMasternodes)
-{
-    ui->labelInfoMasternodes->setText(strMasternodes);
-}
-
 void SettingsInformationWidget::openNetworkMonitor()
 {
     if (!rpcConsole) {
@@ -187,24 +180,17 @@ void SettingsInformationWidget::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     if (clientModel) {
-        clientModel->startMasternodesTimer();
-        // Initial masternodes count value, running in a worker thread to not lock mnmanager mutex in the main thread.
         execute(REQUEST_UPDATE_COUNTS);
     }
 }
 
 void SettingsInformationWidget::hideEvent(QHideEvent *event) {
     QWidget::hideEvent(event);
-    if (clientModel) {
-        clientModel->stopMasternodesTimer();
-    }
 }
 
 void SettingsInformationWidget::run(int type)
 {
     if (type == REQUEST_UPDATE_COUNTS) {
-        QMetaObject::invokeMethod(this, "setMasternodeCount",
-                                  Qt::QueuedConnection, Q_ARG(QString, clientModel->getMasternodesCountString()));
         QMetaObject::invokeMethod(this, "setNumBlocks",
                                   Qt::QueuedConnection, Q_ARG(int, clientModel->getLastBlockProcessedHeight()));
     }
@@ -212,9 +198,8 @@ void SettingsInformationWidget::run(int type)
 
 void SettingsInformationWidget::onError(QString error, int type)
 {
-    if (type == REQUEST_UPDATE_COUNTS) {
-        setMasternodeCount(tr("No available data"));
-    }
+    Q_UNUSED(error);
+    Q_UNUSED(type);
 }
 
 SettingsInformationWidget::~SettingsInformationWidget()

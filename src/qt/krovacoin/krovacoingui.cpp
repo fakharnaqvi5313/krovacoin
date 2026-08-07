@@ -123,9 +123,7 @@ KROVACOINGUI::KROVACOINGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         sendWidget = new SendWidget(this);
         receiveWidget = new ReceiveWidget(this);
         addressesWidget = new AddressesWidget(this);
-        masterNodesWidget = new MasterNodesWidget(this);
         coldStakingWidget = new ColdStakingWidget(this);
-        governancewidget = new GovernanceWidget(this);
         settingsWidget = new SettingsWidget(this);
 
         // Add to parent
@@ -133,9 +131,7 @@ KROVACOINGUI::KROVACOINGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer->addWidget(sendWidget);
         stackedContainer->addWidget(receiveWidget);
         stackedContainer->addWidget(addressesWidget);
-        stackedContainer->addWidget(masterNodesWidget);
         stackedContainer->addWidget(coldStakingWidget);
-        stackedContainer->addWidget(governancewidget);
         stackedContainer->addWidget(settingsWidget);
         stackedContainer->setCurrentWidget(dashboard);
 
@@ -199,12 +195,8 @@ void KROVACOINGUI::connectActions()
     connect(sendWidget, &SendWidget::showHide, this, &KROVACOINGUI::showHide);
     connect(receiveWidget, &ReceiveWidget::showHide, this, &KROVACOINGUI::showHide);
     connect(addressesWidget, &AddressesWidget::showHide, this, &KROVACOINGUI::showHide);
-    connect(masterNodesWidget, &MasterNodesWidget::showHide, this, &KROVACOINGUI::showHide);
-    connect(masterNodesWidget, &MasterNodesWidget::execDialog, this, &KROVACOINGUI::execDialog);
     connect(coldStakingWidget, &ColdStakingWidget::showHide, this, &KROVACOINGUI::showHide);
     connect(coldStakingWidget, &ColdStakingWidget::execDialog, this, &KROVACOINGUI::execDialog);
-    connect(governancewidget, &GovernanceWidget::showHide, this, &KROVACOINGUI::showHide);
-    connect(governancewidget, &GovernanceWidget::execDialog, this, &KROVACOINGUI::execDialog);
     connect(settingsWidget, &SettingsWidget::execDialog, this, &KROVACOINGUI::execDialog);
 }
 
@@ -254,9 +246,7 @@ void KROVACOINGUI::setClientModel(ClientModel* _clientModel)
         topBar->setClientModel(clientModel);
         dashboard->setClientModel(clientModel);
         sendWidget->setClientModel(clientModel);
-        masterNodesWidget->setClientModel(clientModel);
         settingsWidget->setClientModel(clientModel);
-        governancewidget->setClientModel(clientModel);
 
         // Receive and report messages from client model
         connect(clientModel, &ClientModel::message, this, &KROVACOINGUI::message);
@@ -265,7 +255,6 @@ void KROVACOINGUI::setClientModel(ClientModel* _clientModel)
         });
         connect(topBar, &TopBar::walletSynced, dashboard, &DashboardWidget::walletSynced);
         connect(topBar, &TopBar::walletSynced, coldStakingWidget, &ColdStakingWidget::walletSynced);
-        connect(topBar, &TopBar::tierTwoSynced, governancewidget, &GovernanceWidget::tierTwoSynced);
 
         // Get restart command-line parameters and handle restart
         connect(settingsWidget, &SettingsWidget::handleRestart, [this](QStringList arg){handleRestart(arg);});
@@ -503,20 +492,9 @@ void KROVACOINGUI::goToAddresses()
     showTop(addressesWidget);
 }
 
-void KROVACOINGUI::goToMasterNodes()
-{
-    masterNodesWidget->resetCoinControl();
-    showTop(masterNodesWidget);
-}
-
 void KROVACOINGUI::goToColdStaking()
 {
     showTop(coldStakingWidget);
-}
-
-void KROVACOINGUI::goToGovernance()
-{
-    showTop(governancewidget);
 }
 
 void KROVACOINGUI::goToSettings(){
@@ -612,7 +590,7 @@ int KROVACOINGUI::getNavWidth()
 void KROVACOINGUI::openFAQ(SettingsFaqWidget::Section section)
 {
     showHide(true);
-    SettingsFaqWidget* dialog = new SettingsFaqWidget(this, mnModel);
+    SettingsFaqWidget* dialog = new SettingsFaqWidget(this);
     dialog->setSection(section);
     openDialogWithOpaqueBackgroundFullScreen(dialog, this);
     dialog->deleteLater();
@@ -620,20 +598,6 @@ void KROVACOINGUI::openFAQ(SettingsFaqWidget::Section section)
 
 
 #ifdef ENABLE_WALLET
-void KROVACOINGUI::setGovModel(GovernanceModel* govModel)
-{
-    if (!stackedContainer || !clientModel) return;
-    governancewidget->setGovModel(govModel);
-}
-
-void KROVACOINGUI::setMNModel(MNModel* _mnModel)
-{
-    if (!stackedContainer || !clientModel) return;
-    mnModel = _mnModel;
-    governancewidget->setMNModel(mnModel);
-    masterNodesWidget->setMNModel(mnModel);
-}
-
 bool KROVACOINGUI::addWallet(const QString& name, WalletModel* walletModel)
 {
     // Single wallet supported for now..
@@ -647,20 +611,16 @@ bool KROVACOINGUI::addWallet(const QString& name, WalletModel* walletModel)
     receiveWidget->setWalletModel(walletModel);
     sendWidget->setWalletModel(walletModel);
     addressesWidget->setWalletModel(walletModel);
-    masterNodesWidget->setWalletModel(walletModel);
     coldStakingWidget->setWalletModel(walletModel);
-    governancewidget->setWalletModel(walletModel);
     settingsWidget->setWalletModel(walletModel);
 
     // Connect actions..
     connect(walletModel, &WalletModel::message, this, &KROVACOINGUI::message);
-    connect(masterNodesWidget, &MasterNodesWidget::message, this, &KROVACOINGUI::message);
     connect(coldStakingWidget, &ColdStakingWidget::message, this, &KROVACOINGUI::message);
     connect(topBar, &TopBar::message, this, &KROVACOINGUI::message);
     connect(sendWidget, &SendWidget::message,this, &KROVACOINGUI::message);
     connect(receiveWidget, &ReceiveWidget::message,this, &KROVACOINGUI::message);
     connect(addressesWidget, &AddressesWidget::message,this, &KROVACOINGUI::message);
-    connect(governancewidget, &GovernanceWidget::message,this, &KROVACOINGUI::message);
     connect(settingsWidget, &SettingsWidget::message, this, &KROVACOINGUI::message);
 
     // Pass through transaction notifications

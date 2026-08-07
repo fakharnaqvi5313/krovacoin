@@ -18,9 +18,6 @@
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 
-#include "masternode-sync.h" // for MASTERNODE_SYNC_THRESHOLD
-#include "tiertwo/tiertwo_sync_state.h"
-
 #include <QPixmap>
 
 #define REQUEST_UPGRADE_WALLET 1
@@ -486,32 +483,15 @@ void TopBar::setNumBlocks(int count)
 
     std::string text;
     bool needState = true;
-    if (g_tiertwo_sync_state.IsBlockchainSynced()) {
-        // chain synced
+    if (!clientModel->inInitialBlockDownload()) {
+        // chain synced -- there is no tier-two/masternode network to separately
+        // sync in KrovaCoin, so "synced" is just "not in initial block download."
         Q_EMIT walletSynced(true);
-        if (g_tiertwo_sync_state.IsSynced()) {
-            // Node synced
-            ui->pushButtonSync->setButtonText(tr("Synchronized - Block: %1").arg(QString::number(count)));
-            progressBar->setRange(0, 100);
-            progressBar->setValue(100);
-            Q_EMIT tierTwoSynced(true);
-            return;
-        } else {
-
-            // TODO: Show out of sync warning
-            int RequestedMasternodeAssets = g_tiertwo_sync_state.GetSyncPhase();
-            int nAttempt = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
-                           masternodeSync.RequestedMasternodeAttempt + 1 :
-                           MASTERNODE_SYNC_THRESHOLD;
-            int progress = nAttempt + (RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
-            if (progress >= 0) {
-                // todo: MN progress..
-                text = strprintf("%s - Block: %d", masternodeSync.GetSyncStatus(), count);
-                //progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
-                //progressBar->setValue(progress);
-                needState = false;
-            }
-        }
+        ui->pushButtonSync->setButtonText(tr("Synchronized - Block: %1").arg(QString::number(count)));
+        progressBar->setRange(0, 100);
+        progressBar->setValue(100);
+        Q_EMIT tierTwoSynced(true);
+        return;
     } else {
         Q_EMIT walletSynced(false);
     }

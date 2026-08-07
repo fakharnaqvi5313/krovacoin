@@ -420,11 +420,6 @@ bool openConfigfile()
     return openFile(GetConfigFile(gArgs.GetArg("-conf", KROVACOIN_CONF_FILENAME)), true);
 }
 
-bool openMNConfigfile()
-{
-    return openFile(GetMasternodeConfigFile(), true);
-}
-
 bool showBackups()
 {
     return openFile(GetDataDir() / "backups", false);

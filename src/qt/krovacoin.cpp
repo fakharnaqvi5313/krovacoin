@@ -31,8 +31,6 @@
 #include "warnings.h"
 
 #ifdef ENABLE_WALLET
-#include "qt/krovacoin/governancemodel.h"
-#include "qt/krovacoin/mnmodel.h"
 #include "paymentserver.h"
 #include "walletmodel.h"
 #include "interfaces/wallet.h"
@@ -232,8 +230,6 @@ private:
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
     WalletModel* walletModel{nullptr};
-    GovernanceModel* govModel{nullptr};
-    MNModel* mnModel{nullptr};
 #endif
     int returnValue{0};
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
@@ -451,7 +447,6 @@ void BitcoinApplication::requestShutdown()
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
     window->hide();
-    if (govModel) govModel->stop();
     if (walletModel) walletModel->stop();
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
@@ -487,21 +482,14 @@ void BitcoinApplication::initializeResult(int retval)
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
-        mnModel = new MNModel(this);
-        govModel = new GovernanceModel(clientModel, mnModel);
         // TODO: Expose secondary wallets
         if (!vpwallets.empty()) {
             walletModel = new WalletModel(vpwallets[0], optionsModel);
             walletModel->setClientModel(clientModel);
-            mnModel->setWalletModel(walletModel);
-            govModel->setWalletModel(walletModel);
             walletModel->init();
-            mnModel->init();
 
-            window->setGovModel(govModel);
             window->addWallet(KROVACOINGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(KROVACOINGUI::DEFAULT_WALLET);
-            window->setMNModel(mnModel);
         }
 #endif
 

@@ -7,7 +7,6 @@
 
 #include <QDialog>
 
-class MNModel;
 class KROVACOINGUI;
 
 namespace Ui {
@@ -27,7 +26,7 @@ public:
         MNCONTROLLER
     };
 
-    explicit SettingsFaqWidget(KROVACOINGUI* parent, MNModel* _model);
+    explicit SettingsFaqWidget(KROVACOINGUI* parent);
     ~SettingsFaqWidget();
 
     void showEvent(QShowEvent *event) override;

@@ -31,15 +31,15 @@ NavMenuWidget::NavMenuWidget(KROVACOINGUI *mainWindow, QWidget *parent) :
     ui->btnReceive->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     ui->btnAddress->setProperty("name", "address");
     ui->btnAddress->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    ui->btnMaster->setProperty("name", "master");
-    ui->btnMaster->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     ui->btnColdStaking->setProperty("name", "cold-staking");
     ui->btnColdStaking->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     ui->btnSettings->setProperty("name", "settings");
     ui->btnSettings->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    ui->btnGovernance->setProperty("name", "governance");
-    ui->btnGovernance->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    btns = {ui->btnDashboard, ui->btnSend, ui->btnReceive, ui->btnAddress, ui->btnMaster, ui->btnColdStaking, ui->btnSettings, ui->btnGovernance};
+    // KrovaCoin has no masternode or governance/DAO system -- hide these nav
+    // entries entirely rather than leave dead buttons in the sidebar.
+    ui->btnMaster->setVisible(false);
+    ui->btnGovernance->setVisible(false);
+    btns = {ui->btnDashboard, ui->btnSend, ui->btnReceive, ui->btnAddress, ui->btnColdStaking, ui->btnSettings};
     onNavSelected(ui->btnDashboard, true);
 
     ui->scrollAreaNav->setWidgetResizable(true);
@@ -68,17 +68,14 @@ void NavMenuWidget::connectActions() {
     connect(ui->btnDashboard, &QPushButton::clicked, this, &NavMenuWidget::onDashboardClicked);
     connect(ui->btnSend, &QPushButton::clicked, this, &NavMenuWidget::onSendClicked);
     connect(ui->btnAddress, &QPushButton::clicked, this, &NavMenuWidget::onAddressClicked);
-    connect(ui->btnMaster, &QPushButton::clicked, this, &NavMenuWidget::onMasterNodesClicked);
     connect(ui->btnSettings, &QPushButton::clicked, this, &NavMenuWidget::onSettingsClicked);
     connect(ui->btnReceive, &QPushButton::clicked, this, &NavMenuWidget::onReceiveClicked);
     connect(ui->btnColdStaking, &QPushButton::clicked, this, &NavMenuWidget::onColdStakingClicked);
-    connect(ui->btnGovernance, &QPushButton::clicked, this, &NavMenuWidget::onGovClicked);
 
     ui->btnDashboard->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_1));
     ui->btnSend->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_2));
     ui->btnReceive->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_3));
     ui->btnAddress->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_4));
-    ui->btnMaster->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_5));
     ui->btnColdStaking->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_6));
     ui->btnSettings->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_7));
 }
@@ -98,20 +95,9 @@ void NavMenuWidget::onAddressClicked(){
     onNavSelected(ui->btnAddress);
 }
 
-void NavMenuWidget::onMasterNodesClicked(){
-    window->goToMasterNodes();
-    onNavSelected(ui->btnMaster);
-}
-
 void NavMenuWidget::onColdStakingClicked() {
     window->goToColdStaking();
     onNavSelected(ui->btnColdStaking);
-}
-
-void NavMenuWidget::onGovClicked()
-{
-    window->goToGovernance();
-    onNavSelected(ui->btnGovernance);
 }
 
 void NavMenuWidget::onSettingsClicked(){

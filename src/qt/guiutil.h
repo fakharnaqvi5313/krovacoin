@@ -142,9 +142,6 @@ bool openDebugLogfile();
 // Open krovacoin.conf
 bool openConfigfile();
 
-// Open masternode.conf
-bool openMNConfigfile();
-
 // Browse backup folder
 bool showBackups();
 

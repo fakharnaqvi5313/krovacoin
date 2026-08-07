@@ -102,14 +102,6 @@ public:
     //! Set the automatic port mapping options
     static void mapPort(bool use_upnp, bool use_natpmp);
 
-    // Start/Stop the masternode polling timer
-    void startMasternodesTimer();
-    void stopMasternodesTimer();
-    // Force a MN count update calling mnmanager directly locking its internal mutex.
-    // Future todo: implement an event based update and remove the lock requirement.
-    QString getMasternodesCountString();
-    int getMasternodesCount() const { return m_cached_masternodes_count; }
-
 private:
     // Listeners
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
@@ -119,13 +111,11 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
 
-    QString getMasternodeCountString();
     OptionsModel* optionsModel;
     PeerTableModel* peerTableModel;
     BanTableModel *banTableModel;
 
     const CBlockIndex* cacheTip{nullptr};
-    QString cachedMasternodeCountString;
     bool cachedReindexing;
     bool cachedImporting;
     std::atomic<bool> cachedInitialSync{false};
@@ -133,9 +123,6 @@ private:
     int numBlocksAtStartup;
 
     QTimer* pollTimer;
-    QTimer* pollMnTimer;
-
-    std::atomic_int m_cached_masternodes_count{0};
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -144,7 +131,6 @@ Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
     void networkActiveChanged(bool networkActive);
-    void strMasternodesChanged(const QString& strMasternodes);
     void alertsChanged(const QString& warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
@@ -156,7 +142,6 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void updateTimer();
-    void updateMnTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();

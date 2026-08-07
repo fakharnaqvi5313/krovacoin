@@ -6,7 +6,6 @@
 
 #include "walletmodel.h"
 
-#include "budget/budgetproposal.h"
 #include "interfaces/handler.h"
 #include "sapling/key_io_sapling.h"
 #include "sapling/sapling_operation.h"
@@ -652,27 +651,6 @@ OperationResult WalletModel::PrepareShieldedTransaction(WalletModelTransaction* 
     txRef = MakeTransactionRef(operation.getFinalTx());
     modelTransaction->setTransactionFee(operation.getFee()); // in the future, fee will be dynamically calculated.
     return operationResult;
-}
-
-OperationResult WalletModel::createAndSendProposalFeeTx(CBudgetProposal& proposal)
-{
-    CTransactionRef wtx;
-    const uint256& nHash = proposal.GetHash();
-    CReserveKey keyChange(wallet);
-    if (!wallet->CreateBudgetFeeTX(wtx, nHash, keyChange, BUDGET_FEE_TX_OLD)) { // 50 KROV collateral for proposal
-        return {false , "Error making fee transaction for proposal. Please check your wallet balance."};
-    }
-
-    // send the tx to the network
-    mapValue_t extraValues;
-    extraValues.emplace("proposal", toHexStr(proposal));
-    const CWallet::CommitResult& res = wallet->CommitTransaction(wtx, &keyChange, g_connman.get(), &extraValues);
-    if (res.status != CWallet::CommitStatus::OK) {
-        return {false, strprintf("Cannot commit proposal fee transaction: %s", res.ToString())};
-    }
-    // Everything went fine, set the fee tx hash
-    proposal.SetFeeTxHash(wtx->GetHash());
-    return {true};
 }
 
 const CWalletTx* WalletModel::getTx(uint256 id)

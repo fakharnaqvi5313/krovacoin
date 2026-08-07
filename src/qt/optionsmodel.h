@@ -51,7 +51,6 @@ public:
         HideZeroBalances,    // bool
         HideOrphans,    // bool
         AnonymizeKrovacoinAmount, //int
-        ShowMasternodesTab,  // bool
         Listen,              // bool
         ShowColdStakingScreen,  // bool
         OptionIDRowCount,

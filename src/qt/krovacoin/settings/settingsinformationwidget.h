@@ -35,7 +35,6 @@ private Q_SLOTS:
 
 public Q_SLOTS:
     void openNetworkMonitor();
-    void setMasternodeCount(const QString& strMasternodes);
 
 private:
     Ui::SettingsInformationWidget *ui;

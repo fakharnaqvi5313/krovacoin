@@ -16,7 +16,6 @@
 #include "clientversion.h"
 #include "interfaces/handler.h"
 #include "mapport.h"
-#include "masternodeman.h"
 #include "net.h"
 #include "netbase.h"
 #include "guiinterface.h"
@@ -38,7 +37,6 @@ ClientModel::ClientModel(OptionsModel* optionsModel, QObject* parent) : QObject(
                                                                         peerTableModel(0),
                                                                         banTableModel(0),
                                                                         cacheTip(nullptr),
-                                                                        cachedMasternodeCountString(""),
                                                                         cachedReindexing(0), cachedImporting(0),
                                                                         numBlocksAtStartup(-1), pollTimer(0)
 {
@@ -47,10 +45,6 @@ ClientModel::ClientModel(OptionsModel* optionsModel, QObject* parent) : QObject(
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
     pollTimer->start(MODEL_UPDATE_DELAY);
-
-    pollMnTimer = new QTimer(this);
-    connect(pollMnTimer, &QTimer::timeout, this, &ClientModel::updateMnTimer);
-    startMasternodesTimer();
 
     subscribeToCoreSignals();
 }
@@ -74,29 +68,6 @@ int ClientModel::getNumConnections(unsigned int flags) const
     if (g_connman)
          return g_connman->GetNodeCount(connections);
     return 0;
-}
-
-QString ClientModel::getMasternodeCountString()
-{
-    const auto& info = mnodeman.getMNsInfo();
-    int unknown = std::max(0, info.total - info.ipv4 - info.ipv6 - info.onion);
-    m_cached_masternodes_count = info.total;
-    return tr("Total: %1 (IPv4: %2 / IPv6: %3 / Tor: %4 / Unknown: %5)").arg(QString::number(info.total))
-                                                                        .arg(QString::number(info.ipv4))
-                                                                        .arg(QString::number(info.ipv6))
-                                                                        .arg(QString::number(info.onion))
-                                                                        .arg(QString::number(unknown));
-}
-
-QString ClientModel::getMasternodesCountString()
-{
-    if (!cachedMasternodeCountString.isEmpty()) {
-        return cachedMasternodeCountString;
-    }
-
-    // Force an update
-    cachedMasternodeCountString = getMasternodeCountString();
-    return cachedMasternodeCountString;
 }
 
 int ClientModel::getNumBlocks()
@@ -171,34 +142,6 @@ void ClientModel::updateTimer()
     // periodical polls if the core is holding the locks for a longer time -
     // for example, during a wallet rescan.
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
-}
-
-void ClientModel::updateMnTimer()
-{
-    // Following method is locking the mnmanager mutex for now,
-    // future: move to an event based update.
-    QString newMasternodeCountString = getMasternodeCountString();
-
-    if (cachedMasternodeCountString != newMasternodeCountString) {
-        cachedMasternodeCountString = newMasternodeCountString;
-
-        Q_EMIT strMasternodesChanged(cachedMasternodeCountString);
-    }
-}
-
-void ClientModel::startMasternodesTimer()
-{
-    if (!pollMnTimer->isActive()) {
-        // no need to update as frequent as data for balances/txes/blocks
-        pollMnTimer->start(MODEL_UPDATE_DELAY * 40);
-    }
-}
-
-void ClientModel::stopMasternodesTimer()
-{
-    if (pollMnTimer->isActive()) {
-        pollMnTimer->stop();
-    }
 }
 
 void ClientModel::updateNumConnections(int numConnections)

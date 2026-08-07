@@ -8,13 +8,12 @@
 
 #include "qt/krovacoin/settings/settingsfaqwidget.h"
 #include "qt/krovacoin/settings/forms/ui_settingsfaqwidget.h"
-#include "qt/krovacoin/mnmodel.h"
 #include "qt/krovacoin/qtutils.h"
 
 #include <QScrollBar>
 #include <QMetaObject>
 
-SettingsFaqWidget::SettingsFaqWidget(KROVACOINGUI* parent, MNModel* mnModel) :
+SettingsFaqWidget::SettingsFaqWidget(KROVACOINGUI* parent) :
     QDialog(parent),
     ui(new Ui::SettingsFaqWidget)
 {
@@ -81,9 +80,8 @@ SettingsFaqWidget::SettingsFaqWidget(KROVACOINGUI* parent, MNModel* mnModel) :
                "to implement Sapling(SHIELD), a zk-SNARKs based privacy protocol.")) +
         formatFAQParagraph(
             tr("KROVACOIN utilizes a Proof of Stake (PoS) consensus system algorithm, "
-               "allowing all owners of KROVACOIN to participate in earning block rewards "
-               "while securing the network with full node wallets, as well as to "
-               "run Masternodes to create and vote on proposals.")));
+               "allowing all owners of KROVACOIN to participate in securing the network "
+               "and earning rewards by staking with a full node wallet.")));
     ui->labelContent_Intro->setText(introContent);
 
     QString unspendablePIVContent = formatFAQContent(
@@ -118,45 +116,18 @@ SettingsFaqWidget::SettingsFaqWidget(KROVACOINGUI* parent, MNModel* mnModel) :
 
     QString masternodeContent = formatFAQContent(
         formatFAQParagraph(
-            tr("A masternode is a computer running a full node %1 wallet with a "
-               "requirement of %2 secured collateral to provide extra services "
-               "to the network and in return, receive a portion of the block reward "
-               "regularly. These services include:")
-                .arg(PACKAGE_NAME)
-                .arg(GUIUtil::formatBalance(mnModel->getMNCollateralRequiredAmount(), BitcoinUnits::KROV)) +
-            formatFAQUnorderedList(
-                formatFAQListItem(tr("A decentralized governance (Proposal Voting)")) +
-                formatFAQListItem(tr("A decentralized budgeting system (Treasury)")) +
-                formatFAQListItem(tr("Validation of transactions within each block")) +
-                formatFAQListItem(tr("Act as an additional full node in the network")))) +
-        formatFAQParagraph(
-            tr("For providing such services, masternodes are also paid a certain portion "
-               "of reward for each block. This can serve as a passive income to the "
-               "masternode owners minus their running cost.")) +
-        formatFAQParagraph(
-            tr("Masternode Perks:") +
-            formatFAQUnorderedList(
-                formatFAQListItem(tr("Participate in KROVACOIN Governance")) +
-                formatFAQListItem(tr("Earn Masternode Rewards")) +
-                formatFAQListItem(tr("Commodity option for future sale")) +
-                formatFAQListItem(tr("Help secure the KROVACOIN network")))) +
-        formatFAQParagraph(
-            tr("Requirements:") +
-            formatFAQUnorderedList(
-                formatFAQListItem(tr("%1 per single Masternode instance")
-                        .arg(GUIUtil::formatBalance(mnModel->getMNCollateralRequiredAmount(), BitcoinUnits::KROV))) +
-                formatFAQListItem(tr("Must be stored in a core wallet")) +
-                formatFAQListItem(tr("Need dedicated IP address")) +
-                formatFAQListItem(tr("Masternode wallet to remain online")))));
+            tr("%1 does not use masternodes. The network is secured entirely by regular "
+               "Proof of Stake, including native cold staking, which lets you delegate "
+               "the right to stake your coins to a hot node without ever exposing your "
+               "spending keys.")
+                .arg(PACKAGE_NAME)));
     ui->labelContent_Masternode->setText(masternodeContent);
 
     QString mNControllerContent = formatFAQContent(
         formatFAQParagraph(
-            tr("A Masternode Controller wallet is where the %1 collateral "
-               "can reside during a Controller-Remote masternode setup. It is a wallet "
-               "that can activate the remote masternode wallet(s) and allows you to keep "
-               "your collateral coins offline while the remote masternode remains online.")
-                    .arg(GUIUtil::formatBalance(mnModel->getMNCollateralRequiredAmount(), BitcoinUnits::KROV))));
+            tr("Not applicable -- %1 has no masternode or controller-wallet concept. "
+               "See the Staking FAQ entry for how to delegate stake instead.")
+                    .arg(PACKAGE_NAME)));
     ui->labelContent_MNController->setText(mNControllerContent);
 
 

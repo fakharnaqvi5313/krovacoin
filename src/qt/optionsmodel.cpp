@@ -20,7 +20,6 @@
 #include "util/system.h"
 
 #ifdef ENABLE_WALLET
-#include "masternodeconfig.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
@@ -68,9 +67,6 @@ void OptionsModel::Init()
     if (!settings.contains("fShowColdStakingScreen"))
         settings.setValue("fShowColdStakingScreen", false);
     showColdStakingScreen = settings.value("fShowColdStakingScreen", false).toBool();
-
-    if (!settings.contains("fShowMasternodesTab"))
-        settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
 
     // Main
     setMainDefaultOptions(settings);
@@ -279,8 +275,6 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
-        case ShowMasternodesTab:
-            return settings.value("fShowMasternodesTab");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -373,12 +367,6 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {
                 settings.setValue("bSpendZeroConfChange", value);
-                setRestartRequired(true);
-            }
-            break;
-        case ShowMasternodesTab:
-            if (settings.value("fShowMasternodesTab") != value) {
-                settings.setValue("fShowMasternodesTab", value);
                 setRestartRequired(true);
             }
             break;

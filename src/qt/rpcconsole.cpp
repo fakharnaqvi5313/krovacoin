@@ -183,8 +183,6 @@ void RPCConsole::setClientModel(ClientModel* model)
         setNumBlocks(model->getNumBlocks());
         connect(model, &ClientModel::numBlocksChanged, this, &RPCConsole::setNumBlocks);
 
-        connect(model, &ClientModel::strMasternodesChanged, this, &RPCConsole::setMasternodeCount);
-
         updateNetworkState(num_connections);
         connect(model, &ClientModel::networkActiveChanged, this, &RPCConsole::setNetworkActive);
 
@@ -480,11 +478,6 @@ void RPCConsole::setNumBlocks(int count)
     }
 }
 
-void RPCConsole::setMasternodeCount(const QString& strMasternodes)
-{
-    ui->masternodeCount->setText(strMasternodes);
-}
-
 void RPCConsole::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
@@ -630,11 +623,6 @@ void RPCConsole::showConfEditor()
     GUIUtil::openConfigfile();
 }
 
-void RPCConsole::showMNConfEditor()
-{
-    GUIUtil::openMNConfigfile();
-}
-
 void RPCConsole::peerSelected(const QItemSelection& selected, const QItemSelection& deselected)
 {
     Q_UNUSED(deselected);
@@ -758,7 +746,6 @@ void RPCConsole::showEvent(QShowEvent* event)
 
     // start PeerTableModel auto refresh
     clientModel->getPeerTableModel()->startAutoRefresh();
-    clientModel->startMasternodesTimer();
 }
 
 void RPCConsole::hideEvent(QHideEvent* event)
@@ -770,7 +757,6 @@ void RPCConsole::hideEvent(QHideEvent* event)
 
     // stop PeerTableModel auto refresh
     clientModel->getPeerTableModel()->stopAutoRefresh();
-    clientModel->stopMasternodesTimer();
 }
 
 void RPCConsole::showBackups()

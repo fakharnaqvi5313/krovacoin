@@ -7,7 +7,6 @@
 #include "transactionrecord.h"
 
 #include "key_io.h"
-#include "budget/budgetproposal.h"
 #include "sapling/key_io_sapling.h"
 #include "wallet/wallet.h"
 
@@ -343,17 +342,6 @@ bool TransactionRecord::decomposeDebitTransaction(const CWallet* wallet, const C
                 std::string comment = wtx.GetComment();
                 if (!comment.empty() && IsValidUTF8(comment)) {
                     sub.address = comment;
-                }
-                // Check if this is a budget proposal fee (future: encapsulate functionality inside wallet/governanceModel)
-                std::string prop = getValueOrReturnEmpty(wtx.mapValue, "proposal");
-                if (!prop.empty()) {
-                    const std::vector<unsigned char> vec = ParseHex(prop);
-                    if (!vec.empty()) {
-                        CDataStream ss(vec, SER_DISK, CLIENT_VERSION);
-                        CBudgetProposal proposal;
-                        ss >> proposal;
-                        sub.address = "Proposal: " + proposal.GetName();
-                    }
                 }
                 // future: could expand this to support base64 or hex encoded messages
             }
