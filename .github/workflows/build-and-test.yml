@@ -1,11 +1,17 @@
 name: CI Actions for KROVACOIN
 
-# Every matrix job below builds with --with-gui=no. src/qt/ still references
-# masternode/budget classes removed from the daemon (task 10's cleanup
-# deliberately left the GUI untouched) and does not currently compile --
-# confirmed empirically, not just by inspection. Re-enable per-job once the
-# GUI itself is repaired; until then, disabling it here is what keeps this
-# workflow able to build and test the daemon/CLI/tx tool at all.
+# GUI status: src/qt/ builds again (commit aeed1a590 removed the masternode/
+# governance subsystems that task 10's daemon-side cleanup had left dangling).
+# --with-gui=qt5 is enabled on the jobs that build Qt from system packages via
+# apt/brew (the "nodepends" native Linux and macOS jobs below) -- this exact
+# path (system Qt5, native x86_64-pc-linux-gnu) is what was verified locally.
+# It's left as --with-gui=no on the build_depends*/build_depends_wallet jobs
+# (ARM32/ARM64/Win64/macOS10.12/the depends-based Linux-x86_64 job): those
+# cross-compile Qt from source via depends/packages/qt.mk for a non-native
+# host, which has NOT been verified to work for any of these targets. The
+# "Linux-x86_64-nogui" job is intentionally GUI-off regardless (its own name
+# says so -- it's a dedicated legacy-wallet functional-test variant, not a
+# temporary workaround), so it's unaffected by this.
 #
 # Every job with --enable-debug also adds CXXFLAGS='-fwrapv'. --enable-debug's
 # own DEBUG_CXXFLAGS (configure.ac) adds -ftrapv, which makes ANY signed
@@ -195,7 +201,7 @@ jobs:
             unit_tests: true
             functional_tests: true
             goal: install
-            BITCOIN_CONFIG: "--enable-zmq --enable-debug --with-incompatible-bdb --with-gui=no CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-fwrapv'"
+            BITCOIN_CONFIG: "--enable-zmq --enable-debug --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-fwrapv'"
 
           - name: x64-Linux-latest
             id: Linux-x86_64-nodepends-latest
@@ -204,17 +210,17 @@ jobs:
             unit_tests: true
             functional_tests: true
             goal: install
-            BITCOIN_CONFIG: "--enable-zmq --enable-debug --with-incompatible-bdb --with-gui=no CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-fwrapv'"
+            BITCOIN_CONFIG: "--enable-zmq --enable-debug --with-incompatible-bdb --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' CXXFLAGS='-fwrapv'"
 
           - name: x64-macOS
             id: macOS-nodepends
             os: macos-11
-            brew_install: autoconf automake ccache berkeley-db@4 libtool boost@1.76 miniupnpc libnatpmp pkg-config python@3.8 libevent qrencode gmp libsodium rust librsvg
+            brew_install: autoconf automake ccache berkeley-db@4 libtool boost@1.76 miniupnpc libnatpmp pkg-config python@3.8 qt5 libevent qrencode gmp libsodium rust librsvg
             unit_tests: true
             functional_tests: true
             cc: clang
             cxx: clang++
-            BITCOIN_CONFIG: "--enable-zmq --with-gui=no --enable-reduce-exports --enable-werror --enable-debug --with-boost=/usr/local/opt/boost@1.76 CXXFLAGS='-fwrapv'"
+            BITCOIN_CONFIG: "--enable-zmq --with-gui=qt5 --enable-reduce-exports --enable-werror --enable-debug --with-boost=/usr/local/opt/boost@1.76 CXXFLAGS='-fwrapv'"
 
           - name: x64-macOS-latest
             id: macOS-nodepends-latest
@@ -225,7 +231,7 @@ jobs:
             goal: deploy
             cc: clang
             cxx: clang++
-            BITCOIN_CONFIG: "--enable-zmq --with-gui=no --enable-reduce-exports --enable-werror --enable-debug --with-boost=/usr/local/opt/boost@1.76 CXXFLAGS='-fwrapv'"
+            BITCOIN_CONFIG: "--enable-zmq --with-gui=qt5 --enable-reduce-exports --enable-werror --enable-debug --with-boost=/usr/local/opt/boost@1.76 CXXFLAGS='-fwrapv'"
 
     steps:
       - name: Get Source
