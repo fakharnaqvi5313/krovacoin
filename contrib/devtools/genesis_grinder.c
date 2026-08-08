@@ -6,6 +6,21 @@
  * Prints: nNonce, block hash (display order), merkle root (display order)
  *
  * Build: gcc -O2 -o genesis_grinder genesis_grinder.c -lcrypto
+ *
+ * CAUTION: this tool previously had a confirmed bug (fixed 2026-08-08: the
+ * coinbase tx's nVersion was wrongly set to the block's nVersion argument
+ * instead of the hardcoded 1 CreateGenesisBlock() actually uses, corrupting
+ * the merkle root and making the nonce search meaningless). The merkle root
+ * now matches a real build's output for the case that surfaced this, but the
+ * nonce/hash still hasn't been proven to match bit-for-bit against the real
+ * compiled CreateGenesisBlock()/GetHash() path in every case. Do not trust
+ * this tool's output for a real launch (mainnet or public testnet) without
+ * cross-checking against an actual daemon build first -- e.g. grind directly
+ * in the CChainParams constructor (loop nNonce, compare against the target
+ * decompressed from nBits via arith_uint256, NOT CheckProofOfWork() itself --
+ * that calls Params() internally, which isn't valid yet mid-construction),
+ * print the result, then hardcode it and remove the temporary loop. That's
+ * the real code path, so it's authoritative by construction.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -169,9 +184,13 @@ int main(int argc, char **argv) {
     uint8_t *scriptPubKey = buf; size_t scriptPubKeyLen = buf_len;
     buf = saved_buf2; buf_len = saved_len2; buf_cap = saved_cap2;
 
-    /* Now assemble the full tx. */
+    /* Now assemble the full tx. CreateGenesisBlock() hardcodes the coinbase
+     * tx's own nVersion to 1 regardless of the block's nVersion -- reusing
+     * the block-level nVersion here (as an earlier version of this tool did)
+     * silently produces a different txid/merkle root and searches for a
+     * nonce against the wrong header entirely. */
     buf_reset();
-    push_u32le(nVersion);
+    push_u32le(1);
     push_varint(1);                       /* vin count */
     buf_push(zero32, 32);                 /* prevout hash */
     push_u32le(0xFFFFFFFF);               /* prevout n */

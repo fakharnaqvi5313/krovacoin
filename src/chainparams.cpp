@@ -272,14 +272,17 @@ public:
     {
         strNetworkID = "test";
 
-        // TODO: placeholder timestamp -- replace with a real Aug 2026 headline and
-        // re-grind before the public testnet launches.
-        genesis = CreateGenesisBlock("KrovaCoin testnet genesis - TODO insert verifiable Aug 2026 headline before public launch",
-                                      1785931201, 119161, 0x1e0ffff0, 8, 0);
+        // Genesis timestamp is a real, dated, independently-verifiable headline
+        // (NPR, 06/Aug/2026), the same anti-premine-backdating convention Bitcoin's
+        // own genesis block uses -- proves this chain wasn't started before the
+        // date shown. Re-grind (see contrib/devtools/genesis_grinder.c) only if
+        // the public testnet needs to be reset from scratch.
+        genesis = CreateGenesisBlock("NPR 06/Aug/2026 Trump signs new orders targeting birthright citizenship, weeks after Supreme Court ruling",
+                                      1786170027, 987529, 0x1e0ffff0, 8, 0);
         genesis.hashFinalSaplingRoot = uint256S("0x3e49b5f954aa9d3545bc6c37744661eea48d7c34e3000d82b7f0010c30f4c2fb");
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000003524483005cf7a6b1946c5e0e8d3acdac545366757f45b56997f1a641e9"));
-        assert(genesis.hashMerkleRoot == uint256S("0xb7f862c480f964409e6c3eb8e1b7b92e685b64cb9d734e0041642289d34954ba"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000ef56932bb65700cb706c8eef59a39c3f279cc6062cdf7fc4a3b0d533f38"));
+        assert(genesis.hashMerkleRoot == uint256S("0x58bf5810460b66efe8d63401963dfe68d2ddbe6e1e9ba05ec0bcd6db19a9e606"));
 
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
