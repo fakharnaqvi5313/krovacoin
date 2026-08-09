@@ -11,6 +11,15 @@ $(package)_build_opts+=RANLIB="$($(package)_ranlib)"
 $(package)_build_opts+=AR="$($(package)_ar)"
 $(package)_build_opts_darwin+=AR="$($(package)_libtool)"
 $(package)_build_opts_darwin+=ARFLAGS="-o"
+# zlib's own bundled ./configure (not depends' machinery) auto-detects the
+# BUILD machine's uname for its ARFLAGS default, not the cross-compile
+# target -- when building ON macOS FOR a non-darwin host (e.g. mingw32),
+# it still bakes in Darwin's libtool-style "-o", which the cross target's
+# real (GNU binutils) ar doesn't understand ("invalid option -- o"/"-z").
+# Force a standard GNU ar flag whenever the host AR isn't the macOS libtool
+# path being used above.
+$(package)_build_opts_mingw32+=ARFLAGS="rc"
+$(package)_build_opts_linux+=ARFLAGS="rc"
 endef
 
 define $(package)_config_cmds

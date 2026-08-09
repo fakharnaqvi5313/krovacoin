@@ -194,7 +194,15 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
         // Search
         //
         int64_t nStart = GetTime();
-        arith_uint256& hashTarget = arith_uint256().SetCompact(pblock->nBits);
+        // NOTE: must be a value, not a reference -- SetCompact() returns
+        // arith_uint256&, so binding a reference here would dangle the
+        // instant the arith_uint256() temporary it's called on is destroyed
+        // at the end of this statement, making every later hashTarget
+        // comparison/SetCompact() call undefined behavior. This is why the
+        // miner could appear to "find" a block whose hash didn't actually
+        // satisfy the real target -- ProcessNewBlock()'s own, correct
+        // CheckProofOfWork() then rejected it downstream.
+        arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
         while (true) {
             unsigned int nHashesDone = 0;
 

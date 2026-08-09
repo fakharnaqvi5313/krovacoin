@@ -1,0 +1,30 @@
+Modern mingw-w64 (unlike the mingw-w64 headers current when Qt 5.9 was
+written) already declares TOUCHINPUT/TOUCHEVENTF_* itself in winuser.h.
+Qt's own compatibility shim here is unconditional for any MinGW compiler,
+regardless of whether the headers already provide it, so it now collides
+with the real declaration ("redefinition of 'struct tagTOUCHINPUT'").
+Only fall back to Qt's own copy when the headers genuinely lack it, same
+as the non-MinGW branch already does.
+
+diff --git a/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp b/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp
+index 0000000..0000000 100644
+--- a/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp
++++ b/qtbase/src/plugins/platforms/windows/qwindowsmousehandler.cpp
+@@ -60,7 +60,7 @@
+  * are present in the Windows SDK's, but not in older MSVC Express
+  * versions. */
+
+-#if defined(Q_CC_MINGW) || !defined(TOUCHEVENTF_MOVE)
++#if !defined(TOUCHEVENTF_MOVE)
+
+ typedef struct tagTOUCHINPUT {
+     LONG x;
+@@ -85,7 +85,7 @@
+ #  define TOUCHEVENTF_PALM 0x0080
+ #  define TOUCHINPUTMASKF_CONTACTAREA 0x0004
+ #  define TOUCHINPUTMASKF_EXTRAINFO 0x0002
+-#endif // if defined(Q_CC_MINGW) || !defined(TOUCHEVENTF_MOVE)
++#endif // if !defined(TOUCHEVENTF_MOVE)
+
+ QT_BEGIN_NAMESPACE
+

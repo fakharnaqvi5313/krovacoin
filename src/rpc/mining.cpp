@@ -251,7 +251,7 @@ UniValue getsuperblockinfo(const JSONRPCRequest& request)
     UniValue outputs(UniValue::VARR);
     if (hasStakers) {
         const PremineAllocation& pool = GetStakingRewardsPoolAllocation();
-        std::vector<unsigned char> poolScriptBytes = ParseHex(pool.scriptPubKeyHex);
+        std::vector<unsigned char> poolScriptBytes = ParseHex(GetEffectiveScriptPubKeyHex(pool));
         CScript poolScript(poolScriptBytes.begin(), poolScriptBytes.end());
 
         // Without the real pool balance we can still show exactly what each

@@ -21,6 +21,7 @@
 #include "spork.h"
 #include "timedata.h"
 #include "util/system.h"
+#include "utiltime.h"
 #include "util/validation.h"
 #include "validationinterface.h"
 
@@ -43,6 +44,32 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 {
     int64_t nOldTime = pblock->nTime;
     int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+
+    // Time Protocol V2 (active from height 0 on every current KrovaCoin
+    // network) requires block timestamps to land exactly on a
+    // nTimeSlotLength-second slot boundary -- see IsValidBlockTimeStamp() in
+    // consensus/params.h, enforced by CheckBlockTime() in validation.cpp
+    // (skipped on regtest only, which is why this was never caught there).
+    // Round up to the next valid slot so the built-in miner doesn't produce
+    // a block that gets rejected outright with "invalid-time-mask".
+    if (consensusParams.IsTimeProtocolV2(pindexPrev->nHeight + 1)) {
+        const int64_t slotLen = consensusParams.nTimeSlotLength;
+        nNewTime = ((nNewTime + slotLen - 1) / slotLen) * slotLen;
+
+        // Rounding up can (and, mining faster than one block per slot --
+        // e.g. an unconstrained CPU miner on an easy target -- routinely
+        // does) push nNewTime ahead of real time. Once Time Protocol V2 is
+        // active, CheckBlockTime()'s allowed future-drift is only
+        // nTimeSlotLength-1 seconds (FutureBlockTimeDrift() in
+        // consensus/params.h), far tighter than PoW's old multi-hour
+        // allowance, so submitting immediately would get rejected as
+        // "too far in the future". Wait for real time to actually reach
+        // the chosen slot instead of only pretending it has.
+        int64_t nWait = nNewTime - GetAdjustedTime();
+        if (nWait > 0) {
+            MilliSleep(nWait * 1000);
+        }
+    }
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
