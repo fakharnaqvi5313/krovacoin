@@ -34,7 +34,10 @@ static const CAmount POOL_TOTAL = PHASE_A_TOTAL + PHASE_B_TOTAL + PHASE_C_TOTAL;
 // (e.g. 7300 cycles * 2.52e17 ~= 1.8e21) -- widen to __int128 for the
 // multiply, then divide back down. See task 8: this is exactly the shape of
 // bug that hit GetTotalBudget() for real.
-static CAmount MulDiv(int64_t a, CAmount b, int64_t c)
+// Named MulDivShare (not plain MulDiv) because winbase.h declares its own
+// int MulDiv(int,int,int) in the global namespace on Windows, which made
+// every call here ambiguous.
+static CAmount MulDivShare(int64_t a, CAmount b, int64_t c)
 {
     assert(a >= 0 && b >= 0 && c > 0);
     __int128 result = (__int128)a * (__int128)b / (__int128)c;
@@ -75,13 +78,13 @@ CAmount GetSuperblockCumulativeTarget(int64_t cycleIndex)
     if (n <= 0) return 0;
 
     if (n <= PHASE_A_CYCLES) {
-        return MulDiv(n, PHASE_A_ANNUAL, CYCLES_PER_YEAR);
+        return MulDivShare(n, PHASE_A_ANNUAL, CYCLES_PER_YEAR);
     }
     if (n <= PHASE_A_CYCLES + PHASE_B_CYCLES) {
-        return PHASE_A_TOTAL + MulDiv(n - PHASE_A_CYCLES, PHASE_B_ANNUAL, CYCLES_PER_YEAR);
+        return PHASE_A_TOTAL + MulDivShare(n - PHASE_A_CYCLES, PHASE_B_ANNUAL, CYCLES_PER_YEAR);
     }
     if (n <= PHASE_A_CYCLES + PHASE_B_CYCLES + PHASE_C_CYCLES) {
-        return PHASE_A_TOTAL + PHASE_B_TOTAL + MulDiv(n - PHASE_A_CYCLES - PHASE_B_CYCLES, PHASE_C_ANNUAL, CYCLES_PER_YEAR);
+        return PHASE_A_TOTAL + PHASE_B_TOTAL + MulDivShare(n - PHASE_A_CYCLES - PHASE_B_CYCLES, PHASE_C_ANNUAL, CYCLES_PER_YEAR);
     }
     return POOL_TOTAL; // pool exhausted
 }
@@ -143,7 +146,7 @@ bool BuildSuperblockPayoutOutputs(
         // so it can never overpay the pool. Any remainder (a few base units at
         // most, from rounding) simply stays in the pool's change output below
         // -- it isn't lost, just carried into future cycles' distributions.
-        CAmount share = MulDiv(entry.second, targetPayout, totalBlocks);
+        CAmount share = MulDivShare(entry.second, targetPayout, totalBlocks);
         if (share <= 0) continue;
         outputsOut.emplace_back(share, entry.first);
         distributed += share;
@@ -177,7 +180,7 @@ bool CheckSuperblockPayoutTx(const CTransaction& tx, int nHeight, const CCoinsVi
     // Only a transaction actually spending the pool's own address can be the
     // superblock payout -- anything else is just an ordinary transaction that
     // happens to be included in the same block.
-    std::vector<unsigned char> poolScriptBytes = ParseHex(GetStakingRewardsPoolAllocation().scriptPubKeyHex);
+    std::vector<unsigned char> poolScriptBytes = ParseHex(GetEffectiveScriptPubKeyHex(GetStakingRewardsPoolAllocation()));
     CScript expectedPoolScript(poolScriptBytes.begin(), poolScriptBytes.end());
     if (poolScriptPubKey != expectedPoolScript) return false;
 

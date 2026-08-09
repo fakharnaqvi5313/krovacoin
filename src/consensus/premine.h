@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <string>
 #include <vector>
 
 /**
@@ -59,6 +60,19 @@ inline const PremineAllocation& GetTeamFoundersAllocation()
     assert(strcmp(vPremineAllocations[2].name, "TeamFounders") == 0);
     return vPremineAllocations[2];
 }
+
+// Returns the destination script that should actually be used for `allocation`
+// on the currently-selected network: the real placeholder on mainnet, or a
+// single, real, team-known test key (privkey recorded in TESTNET.md; see
+// premine.cpp) everywhere else. The mainnet placeholders are real "TBD at key
+// ceremony" addresses -- nobody, including this team, holds their private
+// keys. Without this override, testnet/regtest premine would be permanently
+// unspendable: once PoS activation requires a stake, no node anywhere could
+// ever produce one, and the chain would halt forever at that height. Every
+// consumer of an allocation's scriptPubKeyHex (GetPremineOutputs,
+// GetTeamVestingOutputs, the superblock payout builder) must go through this
+// instead of reading scriptPubKeyHex directly.
+std::string GetEffectiveScriptPubKeyHex(const PremineAllocation& allocation);
 
 // Sum of all allocations. Asserts on overflow -- this must always equal exactly
 // 72,000,000,000 * COIN; a mismatch here means the allocation table itself is broken

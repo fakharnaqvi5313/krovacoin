@@ -30,9 +30,20 @@ static int64_t AddMonthsUTC(int64_t unixTime, int months)
 {
     time_t t = (time_t)unixTime;
     struct tm tmVal;
+#ifdef HAVE_GMTIME_R
     gmtime_r(&t, &tmVal);
+#else
+    gmtime_s(&tmVal, &t);
+#endif
     tmVal.tm_mon += months;
+    // timegm() (UTC-based inverse of gmtime, distinct from mktime() which is
+    // local-timezone-based) isn't available on Windows; _mkgmtime() is
+    // MinGW/MSVC's equivalent.
+#ifdef WIN32
+    return (int64_t)_mkgmtime(&tmVal);
+#else
     return (int64_t)timegm(&tmVal);
+#endif
 }
 
 static CScript GetCLTVPayToPubKeyHash(int64_t nLockTime, const CKeyID& keyID)
@@ -52,7 +63,7 @@ std::vector<CTxOut> GetTeamVestingOutputs()
     assert(team.amount % VESTING_TRANCHE_COUNT == 0);
     CAmount trancheAmount = team.amount / VESTING_TRANCHE_COUNT;
 
-    std::vector<unsigned char> scriptBytes = ParseHex(team.scriptPubKeyHex);
+    std::vector<unsigned char> scriptBytes = ParseHex(GetEffectiveScriptPubKeyHex(team));
     CScript teamP2PKH(scriptBytes.begin(), scriptBytes.end());
     CTxDestination dest;
     bool ok = ExtractDestination(teamP2PKH, dest);
