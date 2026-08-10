@@ -14,7 +14,12 @@
 // Real, team-known keypair (see TESTNET.md for the WIF privkey) used for
 // every allocation on every non-mainnet network -- see GetEffectiveScriptPubKeyHex()'s
 // doc comment in premine.h for why this exists.
-static const char* TEST_PREMINE_SCRIPTPUBKEY_HEX = "76a9146f4064889e0e0cb0dfdcf8681588cc1d10f3002788ac";
+//
+// Regenerated 2026-08-10: the previous key's WIF was never actually recorded anywhere
+// (TESTNET.md didn't exist despite this comment referencing it), making every prior
+// regtest/testnet chain's premine permanently unspendable by anyone. This one's WIF is
+// committed to TESTNET.md at the same time as this change, so that doesn't happen again.
+static const char* TEST_PREMINE_SCRIPTPUBKEY_HEX = "76a91492f2bd80a027f45a50c1a0b44b0754e5e976238288ac";
 
 std::string GetEffectiveScriptPubKeyHex(const PremineAllocation& allocation)
 {

@@ -166,9 +166,31 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
         //
         unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
 
-        std::unique_ptr<CBlockTemplate> pblocktemplate((fProofOfStake ?
-                                                        BlockAssembler(Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(CScript(), pwallet, true, &availableCoins) :
-                                                        CreateNewBlockWithKey(pReservekey, pwallet)));
+        std::unique_ptr<CBlockTemplate> pblocktemplate;
+        if (fProofOfStake) {
+            // CreateNewBlock's own TestBlockValidity self-check throws std::runtime_error on
+            // failure (see blockassembler.cpp) -- appropriate for the caller in general (a
+            // self-built block failing its own validity check is usually a real bug worth
+            // failing loudly on), but NOT survivable here: at a superblock height with no payout
+            // transaction in the mempool yet (an expected, recoverable condition -- the payout
+            // is meant to be injected by an external pool-key-holding operator, per
+            // getsuperblockinfo's own doc comment, not built by the staker itself), this is the
+            // ONLY thing standing between "found a valid stake but the block happens to be
+            // invalid for an unrelated reason" and "the entire staking thread exits and never
+            // stakes again for the rest of this process's life." Confirmed reproducible: this
+            // exact exception (bad-superblock-payout) killed ThreadStakeMinter every single time
+            // in testing, silently, since nothing here previously caught it. Treat it exactly
+            // like "no kernel found this pass" -- log once and retry next attempt.
+            try {
+                pblocktemplate = BlockAssembler(Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(CScript(), pwallet, true, &availableCoins);
+            } catch (const std::runtime_error& e) {
+                LogPrintf("ThreadStakeMinter(): CreateNewBlock failed, will retry -- %s\n", e.what());
+                MilliSleep(2000);
+                continue;
+            }
+        } else {
+            pblocktemplate = CreateNewBlockWithKey(pReservekey, pwallet);
+        }
         if (!pblocktemplate) continue;
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
 
@@ -317,7 +339,7 @@ void ThreadStakeMinter()
         BitcoinMiner(pwallet, true);
         boost::this_thread::interruption_point();
     } catch (const std::exception& e) {
-        LogPrintf("ThreadStakeMinter() exception \n");
+        LogPrintf("ThreadStakeMinter() exception: %s\n", e.what());
     } catch (...) {
         LogPrintf("ThreadStakeMinter() error \n");
     }

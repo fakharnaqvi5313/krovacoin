@@ -66,6 +66,24 @@ CAmount GetSuperblockPayout(int nHeight);
 // entirely inside the PoW bootstrap period -- the "zero stakers" edge case).
 std::map<CScript, int> TallyStakersInCycle(int cycleStartHeight, int cycleEndHeight);
 
+// Pure distribution math, deliberately separated from BuildSuperblockPayoutOutputs' chain
+// lookups (TallyStakersInCycle needs a populated chainActive/block-on-disk, making it awkward
+// to unit test) so this -- the part with the actual payout arithmetic, including the
+// pool-balance clamp -- can be tested directly with a synthetic tally.
+//
+// `targetPayout` is clamped to `poolInputValue` before computing shares: the schedule's target
+// is computed purely from cycle index (see GetSuperblockPayout) and has no idea what the pool's
+// coin is actually worth, while `poolInputValue` is untrusted, externally-supplied chain state
+// (this is reachable from block validation, not just our own construction -- see
+// CheckSuperblockPayoutTx/ConnectBlock). A short/mismatched pool balance must degrade to "pay
+// out what's there," never assert/crash: a crash here is reachable from any peer's block.
+void ComputeSuperblockDistribution(
+        const std::map<CScript, int>& tally,
+        CAmount targetPayout,
+        CAmount poolInputValue,
+        const CScript& poolScriptPubKey,
+        std::vector<CTxOut>& outputsOut);
+
 // Given the pool's current coin value and the per-staker block tally, compute
 // the payout outputs: one per staker (floor(poolPayout * theirBlocks / totalBlocks)),
 // plus a final change output returning the remainder to the pool's own

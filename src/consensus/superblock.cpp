@@ -120,6 +120,57 @@ std::map<CScript, int> TallyStakersInCycle(int cycleStartHeight, int cycleEndHei
     return tally;
 }
 
+void ComputeSuperblockDistribution(
+        const std::map<CScript, int>& tally,
+        CAmount targetPayout,
+        CAmount poolInputValue,
+        const CScript& poolScriptPubKey,
+        std::vector<CTxOut>& outputsOut)
+{
+    outputsOut.clear();
+    if (tally.empty() || targetPayout <= 0) return;
+
+    int totalBlocks = 0;
+    for (const auto& entry : tally) totalBlocks += entry.second;
+    if (totalBlocks <= 0) return;
+
+    // The schedule's target is computed purely from cycle index (GetSuperblockPayout has no
+    // idea what the pool's coin is actually worth right now) and poolInputValue comes from
+    // whatever coin the transaction under validation actually spends -- untrusted, externally
+    // supplied chain data, not something this function's own construction guarantees agrees
+    // with the schedule. A short/mismatched pool balance must degrade to "pay out what's
+    // there," not crash: this runs inside block validation (ConnectBlock, validation.cpp),
+    // reachable for every block at a superblock height regardless of who produced it, so an
+    // assert() here is a remote crash reachable from any peer's block -- a real one, not
+    // theoretical: reproduced locally the first time this path was ever exercised end-to-end,
+    // because on any non-mainnet network every premine allocation (including the pool) shares
+    // one test key (see GetEffectiveScriptPubKeyHex), so ordinary test spends from that same
+    // key routinely have less value than the schedule's target.
+    if (targetPayout > poolInputValue) targetPayout = poolInputValue;
+
+    CAmount distributed = 0;
+    for (const auto& entry : tally) {
+        // Floor division: the sum of shares is <= targetPayout by construction,
+        // so it can never overpay the pool. Any remainder (a few base units at
+        // most, from rounding) simply stays in the pool's change output below
+        // -- it isn't lost, just carried into future cycles' distributions.
+        CAmount share = MulDivShare(entry.second, targetPayout, totalBlocks);
+        if (share <= 0) continue;
+        outputsOut.emplace_back(share, entry.first);
+        distributed += share;
+    }
+
+    // Both now genuinely follow from this function's own arithmetic (targetPayout is clamped
+    // to poolInputValue above, and shares are floor-divided from targetPayout) rather than from
+    // an assumption about external state -- safe to assert.
+    assert(distributed <= targetPayout);
+    assert(distributed <= poolInputValue);
+    CAmount change = poolInputValue - distributed;
+    if (change > 0) {
+        outputsOut.emplace_back(change, poolScriptPubKey);
+    }
+}
+
 bool BuildSuperblockPayoutOutputs(
         int nHeight,
         const CScript& poolScriptPubKey,
@@ -134,30 +185,10 @@ bool BuildSuperblockPayoutOutputs(
     std::map<CScript, int> tally = TallyStakersInCycle(cycleStartHeight, cycleEndHeight);
     if (tally.empty()) return false; // zero stakers this cycle -- no payout, pool untouched
 
-    int totalBlocks = 0;
-    for (const auto& entry : tally) totalBlocks += entry.second;
-
     CAmount targetPayout = GetSuperblockPayout(nHeight);
     if (targetPayout <= 0) return false; // pool exhausted or misconfigured
 
-    CAmount distributed = 0;
-    for (const auto& entry : tally) {
-        // Floor division: the sum of shares is <= targetPayout by construction,
-        // so it can never overpay the pool. Any remainder (a few base units at
-        // most, from rounding) simply stays in the pool's change output below
-        // -- it isn't lost, just carried into future cycles' distributions.
-        CAmount share = MulDivShare(entry.second, targetPayout, totalBlocks);
-        if (share <= 0) continue;
-        outputsOut.emplace_back(share, entry.first);
-        distributed += share;
-    }
-
-    assert(distributed <= targetPayout);
-    assert(distributed <= poolInputValue);
-    CAmount change = poolInputValue - distributed;
-    if (change > 0) {
-        outputsOut.emplace_back(change, poolScriptPubKey);
-    }
+    ComputeSuperblockDistribution(tally, targetPayout, poolInputValue, poolScriptPubKey, outputsOut);
     return !outputsOut.empty();
 }
 
