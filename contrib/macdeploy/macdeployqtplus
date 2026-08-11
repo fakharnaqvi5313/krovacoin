@@ -527,10 +527,19 @@ icvp = {
     'backgroundType': 2,
     'backgroundColorRed': 1.0
 }
-alias = Alias().from_bytes(icvp['backgroundImageAlias'])
-alias.volume.name = appname
-alias.volume.posix_path = '/Volumes/' + appname
-icvp['backgroundImageAlias'] = alias.to_bytes()
+try:
+    alias = Alias().from_bytes(icvp['backgroundImageAlias'])
+    alias.volume.name = appname
+    alias.volume.posix_path = '/Volumes/' + appname
+    icvp['backgroundImageAlias'] = alias.to_bytes()
+except Exception as e:
+    # This hardcoded alias-record blob was captured against an older
+    # mac_alias/macOS alias format; newer mac_alias versions can fail to
+    # parse it back. It only controls the DMG Finder window's background
+    # image reference (purely cosmetic) -- drop it rather than fail the
+    # whole build over a background image.
+    print("  (skipping background image alias -- failed to parse: %s)" % e)
+    del icvp['backgroundImageAlias']
 ds['.']['icvp'] = icvp
 
 ds['.']['vSrn'] = ('long', 1)

@@ -460,7 +460,7 @@
 #define OPENMP 1
 
 /* Detected operation system. */
-#define OPSYS LINUX
+#define OPSYS MACOSX
 
 /* Name of package */
 
