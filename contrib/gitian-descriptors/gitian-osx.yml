@@ -29,7 +29,7 @@ packages:
 - "python3-setuptools"
 - "fonts-tuffy"
 remotes:
-- "url": "https://github.com/krovacoin-project/krovacoin.git"
+- "url": "https://github.com/fakharnaqvi5313/krovacoin.git"
   "dir": "krovacoin"
 files:
 - "Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"

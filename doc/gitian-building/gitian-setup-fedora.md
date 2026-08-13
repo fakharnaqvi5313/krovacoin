@@ -60,7 +60,7 @@ git config --global user.email "MY_NAME@example.com"
 Fetching the Build Script
 --------------------------
 
-The build script we'll be using is contained in the KROVACOIN github repository ([contrib/gitian-build.py](https://github.com/krovacoin-project/krovacoin/blob/master/contrib/gitian-build.py)). Since this is a completely fresh environment, we haven't yet cloned the KROVACOIN repository and will need to fetch this script with the following commands:
+The build script we'll be using is contained in the KROVACOIN github repository ([contrib/gitian-build.py](https://github.com/fakharnaqvi5313/krovacoin/blob/master/contrib/gitian-build.py)). Since this is a completely fresh environment, we haven't yet cloned the KROVACOIN repository and will need to fetch this script with the following commands:
 
 ```bash
 curl -L -O https://raw.githubusercontent.com/KROVACOIN-Project/KROVACOIN/master/contrib/gitian-build.py

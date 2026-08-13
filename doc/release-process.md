@@ -6,7 +6,7 @@ Release Process
 ### Before every release candidate
 
 * Update translations (ping Fuzzbawls on Discord) see [translation_process.md](https://github.com/KROVACOIN-Project/KROVACOIN/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/krovacoin-project/krovacoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update manpages, see [gen-manpages.sh](https://github.com/fakharnaqvi5313/krovacoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 ### Before every major and minor release
@@ -49,10 +49,10 @@ If you're using the automated script (found in [contrib/gitian-build.py](/contri
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/krovacoin-project/gitian.sigs.git
-    git clone https://github.com/krovacoin-project/krovacoin-detached-sigs.git
+    git clone https://github.com/fakharnaqvi5313/gitian.sigs.git
+    git clone https://github.com/fakharnaqvi5313/krovacoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/krovacoin-project/krovacoin.git
+    git clone https://github.com/fakharnaqvi5313/krovacoin.git
 
 ### KROVACOIN maintainers/release engineers, suggestion for writing release notes
 

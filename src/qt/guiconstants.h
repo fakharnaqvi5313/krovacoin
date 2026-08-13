@@ -50,7 +50,7 @@ static const int MAX_URI_LENGTH = 255;
 
 
 #define QAPP_ORG_NAME "KROVACOIN"
-#define QAPP_ORG_DOMAIN "krovacoin.org"
+#define QAPP_ORG_DOMAIN "krovacoin.com"
 #define QAPP_APP_NAME_DEFAULT "KROVA-Qt"
 #define QAPP_APP_NAME_TESTNET "KROVA-Qt-testnet"
 

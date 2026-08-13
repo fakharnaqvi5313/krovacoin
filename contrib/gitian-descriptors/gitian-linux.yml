@@ -33,7 +33,7 @@ packages:
 - "ca-certificates"
 - "python3"
 remotes:
-- "url": "https://github.com/krovacoin-project/krovacoin.git"
+- "url": "https://github.com/fakharnaqvi5313/krovacoin.git"
   "dir": "krovacoin"
 files: []
 script: |
