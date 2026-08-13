@@ -189,7 +189,25 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                 continue;
             }
         } else {
-            pblocktemplate = CreateNewBlockWithKey(pReservekey, pwallet);
+            // Same failure mode as the PoS branch above (CreateNewBlockWithKey -> ... ->
+            // CreateNewBlock()'s own TestBlockValidity self-check throwing std::runtime_error),
+            // just never triggered here until a live testnet node actually hit it: after mining
+            // several blocks back-to-back, the freshly-built block's initial nTime landed behind
+            // GetMedianTimePast() by the time its own self-check ran, logging "CheckBlockTime :
+            // block timestamp too old" / "ContextualCheckBlockHeader failed: time-too-old" and
+            // throwing -- uncaught here, that propagates out of BitcoinMiner() entirely, and
+            // ThreadBitcoinMiner()'s outer catch just logs "KROVACOINMiner exception" and returns,
+            // permanently ending the mining thread with no restart. Confirmed reproducible: this
+            // is exactly what happened on the VPS's krovad-testnet node, stuck at height 7 for two
+            // days with the process still alive but no miner thread left running. Same fix as the
+            // PoS branch: treat it like "couldn't build a block this attempt" and retry.
+            try {
+                pblocktemplate = CreateNewBlockWithKey(pReservekey, pwallet);
+            } catch (const std::runtime_error& e) {
+                LogPrintf("BitcoinMiner(): CreateNewBlockWithKey failed, will retry -- %s\n", e.what());
+                MilliSleep(2000);
+                continue;
+            }
         }
         if (!pblocktemplate) continue;
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
